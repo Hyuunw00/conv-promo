@@ -3,7 +3,7 @@ type Props = { name: string };
 const brandStyle = (name: string) => {
   switch (name) {
     case "CU":
-      return "bg-purple-100 text-purple-700";
+      return "bg-green-100 text-green-700";
     case "GS25":
       return "bg-sky-100 text-sky-700";
     case "SevenEleven":

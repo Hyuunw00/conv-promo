@@ -19,7 +19,7 @@ export default function DealTypeFilter({
   ];
 
   return (
-    <div className="sticky top-[76px] z-40 bg-gray-50 px-3 py-2">
+    <div className="sticky top-[120px] z-40 bg-gray-50 px-3 py-2">
       <div className="flex gap-1.5">
         {dealTypes.map((deal) => (
           <button

@@ -1,20 +1,29 @@
 "use client";
 
 import { BrandType } from "@/types/brand";
+import { DealType } from "@/types/deal";
+import DateRangeFilter from "./DateRangeFilter";
+import DealTypeFilter from "./DealTypeFilter";
 
 interface HeaderProps {
   selectedBrand: string;
   onBrandChange: (brand: BrandType) => void;
   brands: BrandType[];
+  selectedDeal: DealType;
+  onDealChange: (deal: DealType) => void;
+  onDateRangeChange: (start: string, end: string) => void;
 }
 
 export default function Header({
   selectedBrand,
   onBrandChange,
   brands,
+  selectedDeal,
+  onDealChange,
+  onDateRangeChange,
 }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="px-3 py-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -68,6 +77,12 @@ export default function Header({
           ))}
         </div>
       </div>
+
+      {/* 날짜 필터 */}
+      <DateRangeFilter onDateRangeChange={onDateRangeChange} />
+
+      {/* 행사 유형 필터 */}
+      <DealTypeFilter selectedDeal={selectedDeal} onDealChange={onDealChange} />
     </header>
   );
 }
