@@ -1,0 +1,26 @@
+{
+  "name": "편털 - 편의점 행사 모아보기",
+  "short_name": "편털",
+  "description": "GS25, CU, 세븐일레븐, 이마트24 등 편의점 1+1, 2+1, 할인 행사를 한눈에",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "lifestyle"],
+  "lang": "ko-KR"
+}
