@@ -2,7 +2,8 @@
 
 import DateRangeFilter from "./DateRangeFilter";
 import DealTypeFilter from "./DealTypeFilter";
-import { brands } from "@/constants/brands";
+import { brands, brandInfo } from "@/constants/brands";
+import Image from "next/image";
 
 interface HeaderProps {
   selectedBrand: string;
@@ -51,19 +52,33 @@ export default function Header({
       {/* 브랜드 필터 탭 */}
       <div className="px-3 pb-2">
         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-          {brands.map((brand) => (
-            <button
-              key={brand}
-              onClick={() => onBrandChange(brand)}
-              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                selectedBrand === brand
-                  ? "bg-gray-900 text-white"
-                  : "bg-gray-100 text-gray-700"
-              }`}
-            >
-              {brand}
-            </button>
-          ))}
+          {brands.map((brand) => {
+            const info = brandInfo[brand as keyof typeof brandInfo];
+            return (
+              <button
+                key={brand}
+                onClick={() => onBrandChange(brand)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                  selectedBrand === brand
+                    ? "bg-gray-900 text-white"
+                    : `${info.bgColor} ${info.textColor}`
+                }`}
+              >
+                {info.logo && (
+                  <div className="w-4 h-4 relative flex-shrink-0">
+                    <Image
+                      src={info.logo}
+                      alt={info.name}
+                      width={16}
+                      height={16}
+                      className="object-contain"
+                    />
+                  </div>
+                )}
+                <span>{info.name}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
