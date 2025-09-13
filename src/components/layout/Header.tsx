@@ -1,27 +1,26 @@
 "use client";
 
-import { BrandType } from "@/types/brand";
-import { DealType } from "@/types/deal";
 import DateRangeFilter from "./DateRangeFilter";
 import DealTypeFilter from "./DealTypeFilter";
+import { brands } from "@/constants/brands";
 
 interface HeaderProps {
   selectedBrand: string;
-  onBrandChange: (brand: BrandType) => void;
-  brands: BrandType[];
-  selectedDeal: DealType;
-  onDealChange: (deal: DealType) => void;
+  onBrandChange: (brand: string) => void;
+  selectedDeal: string;
+  onDealChange: (deal: string) => void;
   onDateRangeChange: (start: string, end: string) => void;
 }
 
 export default function Header({
   selectedBrand,
   onBrandChange,
-  brands,
   selectedDeal,
   onDealChange,
   onDateRangeChange,
 }: HeaderProps) {
+  console.log(selectedBrand, brands);
+
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="px-3 py-2.5">
@@ -52,16 +51,6 @@ export default function Header({
       {/* 브랜드 필터 탭 */}
       <div className="px-3 pb-2">
         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-          <button
-            onClick={() => onBrandChange("all")}
-            className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-              selectedBrand === "all"
-                ? "bg-gray-900 text-white"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            전체
-          </button>
           {brands.map((brand) => (
             <button
               key={brand}

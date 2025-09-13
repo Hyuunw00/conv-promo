@@ -10,16 +10,19 @@ export interface FetchPromotionsOptions {
 }
 
 export class PromotionService {
+  //
+
   static async fetchPromotions(
     options: FetchPromotionsOptions = {}
   ): Promise<{ data: Promotion[] | null; error: Error | null }> {
     try {
+      // 기본값으로 종료일 기준 최신순으로 정렬
       const {
         limit = 50,
         brandName,
         dealType,
-        orderBy = "start_date",
-        ascending = false,
+        orderBy = "end_date",
+        ascending = true,
       } = options;
 
       let query = supabase
@@ -30,12 +33,12 @@ export class PromotionService {
         .order(orderBy, { ascending })
         .limit(limit);
 
-      // Add filters if provided
-      if (brandName && brandName !== "all") {
+      // 조건이 있으면 추가
+      if (brandName && brandName !== "전체") {
         query = query.eq("brand_name", brandName);
       }
 
-      if (dealType && dealType !== "all") {
+      if (dealType && dealType !== "전체") {
         query = query.eq("deal_type", dealType);
       }
 

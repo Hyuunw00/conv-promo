@@ -1,10 +1,8 @@
 "use client";
 
-import { DealType } from "@/types/deal";
-
 interface DealTypeFilterProps {
-  selectedDeal: DealType;
-  onDealChange: (deal: DealType) => void;
+  selectedDeal: string;
+  onDealChange: (deal: string) => void;
 }
 
 export default function DealTypeFilter({
@@ -12,11 +10,12 @@ export default function DealTypeFilter({
   onDealChange,
 }: DealTypeFilterProps) {
   const dealTypes = [
-    { id: "all", label: "전체" },
+    { id: "ALL", label: "전체" },
     { id: "ONE_PLUS_ONE", label: "1+1" },
     { id: "TWO_PLUS_ONE", label: "2+1" },
     { id: "DISCOUNT", label: "할인" },
   ];
+  console.log(selectedDeal);
 
   return (
     <div className="sticky top-[120px] z-40 bg-gray-50 px-3 py-2">
@@ -24,7 +23,7 @@ export default function DealTypeFilter({
         {dealTypes.map((deal) => (
           <button
             key={deal.id}
-            onClick={() => onDealChange(deal.id as DealType)}
+            onClick={() => onDealChange(deal.id)}
             className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
               selectedDeal === deal.id
                 ? "bg-white text-gray-900 shadow-sm"

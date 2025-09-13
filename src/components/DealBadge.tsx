@@ -1,22 +1,36 @@
-import { DealType } from "@/types/deal";
+const getDealBadge = (dealType: string) => {
+  if (!dealType) return null;
 
-export default function DealBadge({ deal }: { deal: DealType }) {
-  deal === "ONE_PLUS_ONE" ? "1+1" : deal === "TWO_PLUS_ONE" ? "2+1" : "할인";
-  const label =
-    deal === "ONE_PLUS_ONE" ? "1+1" : deal === "TWO_PLUS_ONE" ? "2+1" : "할인";
+  const badges: Record<string, { label: string; style: string }> = {
+    ONE_PLUS_ONE: {
+      label: "1+1",
+      style: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white",
+    },
+    TWO_PLUS_ONE: {
+      label: "2+1",
+      style: "bg-gradient-to-r from-purple-500 to-indigo-500 text-white",
+    },
+    DISCOUNT: {
+      label: "할인",
+      style: "bg-gradient-to-r from-orange-500 to-red-500 text-white",
+    },
+  };
 
-  const style =
-    deal === "ONE_PLUS_ONE"
-      ? "bg-emerald-100 text-emerald-700"
-      : deal === "TWO_PLUS_ONE"
-      ? "bg-indigo-100 text-indigo-700"
-      : "bg-amber-100 text-amber-700";
+  const badge = badges[dealType];
+  if (!badge) return null;
+
+  return badge;
+};
+
+export default function DealBadge({ dealType }: { dealType: string }) {
+  const badge = getDealBadge(dealType);
+  if (!badge) return null;
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${style}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${badge.style}`}
     >
-      {label}
+      {badge.label}
     </span>
   );
 }
