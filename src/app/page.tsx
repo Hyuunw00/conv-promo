@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { usePromotions } from "@/hooks/usePromotions";
+import { useState, useEffect, useRef } from "react";
+import { useInfinitePromotions } from "@/hooks/useInfinitePromotions";
 import Header from "@/components/layout/Header";
 import PromoCard from "@/components/PromoCard";
 import BottomNavigation from "@/components/layout/BottomNavigation";
@@ -10,6 +10,8 @@ import Loading from "@/components/ui/Loading";
 export default function Home() {
   const [selectedBrand, setSelectedBrand] = useState<string>("ALL");
   const [selectedDeal, setSelectedDeal] = useState<string>("ALL");
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // 날짜 필터 상태 (오늘부터 14일)
   const today = new Date();
@@ -21,36 +23,36 @@ export default function Home() {
     end: defaultEndDate.toISOString().split("T")[0],
   });
 
-  // 프로모션 데이터 가져오기
-  const { promos, loading, error } = usePromotions();
+  // 무한스크롤 훅 사용
+  const { promos, loading, loadingMore, hasMore, fetchMore } =
+    useInfinitePromotions({
+      brandName: selectedBrand,
+      dealType: selectedDeal,
+      startDate: selectedDateRange.start,
+      endDate: selectedDateRange.end,
+    });
 
-  // 프로모션 필터링
-  const filteredPromos = useMemo(
-    () =>
-      promos.filter((promo) => {
-        // 브랜드 필터
-        if (selectedBrand !== "ALL" && promo.brand_name !== selectedBrand)
-          return false;
+  // Intersection Observer 설정
+  useEffect(() => {
+    if (observerRef.current) observerRef.current.disconnect();
 
-        // 행사 유형 필터
-        if (selectedDeal !== "ALL" && promo.deal_type !== selectedDeal)
-          return false;
-
-        // 날짜 필터 - 프로모션 기간과 선택 기간이 겹치는지 확인
-        const promoStart = new Date(promo.start_date);
-        const promoEnd = new Date(promo.end_date);
-        const filterStart = new Date(selectedDateRange.start);
-        const filterEnd = new Date(selectedDateRange.end);
-
-        // 기간이 겹치는 조건: 프로모션 종료일 >= 필터 시작일 AND 프로모션 시작일 <= 필터 종료일
-        if (promoEnd < filterStart || promoStart > filterEnd) {
-          return false;
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          fetchMore();
         }
+      },
+      { threshold: 0.1 }
+    );
 
-        return true;
-      }),
-    [promos, selectedBrand, selectedDeal, selectedDateRange]
-  );
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) observerRef.current.disconnect();
+    };
+  }, [hasMore, loadingMore, fetchMore]);
 
   return (
     <div className="min-h-screen bg-gray-50 max-w-md mx-auto relative">
@@ -66,7 +68,7 @@ export default function Home() {
       <main className="px-3 pb-16">
         {loading ? (
           <Loading />
-        ) : !loading && filteredPromos.length === 0 ? (
+        ) : !loading && promos.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
@@ -86,11 +88,23 @@ export default function Home() {
             <p className="text-gray-500">선택한 조건의 행사가 없습니다</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredPromos.map((promo) => (
-              <PromoCard key={promo.id} promotion={promo} />
-            ))}
-          </div>
+          <>
+            <div className="space-y-3">
+              {promos.map((promo) => (
+                <PromoCard key={promo.id} promotion={promo} />
+              ))}
+            </div>
+
+            {/* 무한스크롤 트리거 */}
+            <div ref={loadMoreRef} className="py-4">
+              {loadingMore && <Loading />}
+              {!hasMore && promos.length > 0 && (
+                <p className="text-center text-gray-500 text-sm">
+                  모든 프로모션을 불러왔습니다
+                </p>
+              )}
+            </div>
+          </>
         )}
       </main>
 
