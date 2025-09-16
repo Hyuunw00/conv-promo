@@ -15,6 +15,11 @@ export interface FetchPromotionsOptions {
 export class PromotionService {
   //
 
+  /**
+   * 프로모션 조회
+   * @param options 옵션
+   * @returns 프로모션 배열
+   */
   static async fetchPromotions(options: FetchPromotionsOptions = {}): Promise<{
     data: Promotion[] | null;
     error: Error | null;
@@ -83,6 +88,11 @@ export class PromotionService {
     }
   }
 
+  /**
+   * 프로모션 상세 조회
+   * @param id 프로모션 ID
+   * @returns 프로모션 상세
+   */
   static async fetchPromotionById(
     id: string
   ): Promise<{ data: Promotion | null; error: Error | null }> {
@@ -111,6 +121,96 @@ export class PromotionService {
     }
   }
 
+  /**
+   * 검색 프로모션 조회
+   * @param query 검색어
+   * @param limit 조회 개수
+   * @returns 프로모션 배열
+   */
+  static async fetchSearchPromotions(
+    query: string,
+    limit: number = 50
+  ): Promise<{ data: Promotion[] | null; error: Error | null }> {
+    try {
+      if (!query.trim()) {
+        return { data: [], error: null };
+      }
+
+      const { data, error } = await supabase
+        .from("promo_with_brand")
+        .select(
+          "id, brand_name, title, deal_type, start_date, end_date, sale_price, category"
+        )
+        .or(
+          `title.ilike.%${query}%,category.ilike.%${query}%,brand_name.ilike.%${query}%`
+        )
+        .order("end_date", { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error("Error searching promotions:", error);
+        return { data: null, error };
+      }
+
+      return { data: data as Promotion[], error: null };
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      return {
+        data: null,
+        error:
+          error instanceof Error ? error : new Error("Unknown error occurred"),
+      };
+    }
+  }
+
+  /**
+   * 검색 자동완성 제목 추천
+   * @param query 검색어
+   * @param limit 추천 개수
+   * @returns 추천 제목 배열
+   */
+  static async fetchSearchSuggestions(
+    query: string,
+    limit: number = 5
+  ): Promise<{ data: string[] | null; error: Error | null }> {
+    try {
+      if (!query.trim()) {
+        return { data: [], error: null };
+      }
+
+      const { data, error } = await supabase
+        .from("promo_with_brand")
+        .select("title")
+        .ilike("title", `%${query}%`)
+        .limit(limit * 2); // 중복 제거 후 limit 맞추기 위해 더 가져옴
+
+      if (error) {
+        console.error("Error fetching suggestions:", error);
+        return { data: null, error };
+      }
+
+      // 중복 제거 및 정제
+      const uniqueTitles = Array.from(
+        new Set((data || []).map((item) => item.title))
+      ).slice(0, limit);
+
+      return { data: uniqueTitles, error: null };
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      return {
+        data: null,
+        error:
+          error instanceof Error ? error : new Error("Unknown error occurred"),
+      };
+    }
+  }
+
+  /**
+   * 인기 프로모션 조회
+   * @param limit 조회 개수
+   * @param daysAgo 일 수
+   * @returns 프로모션 배열
+   */
   static async fetchPopularPromotions(
     limit: number = 30,
     daysAgo: number = 0
