@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import DateRangeFilter from "./DateRangeFilter";
 import DealTypeFilter from "./DealTypeFilter";
 import { brands, brandInfo } from "@/constants/brands";
@@ -20,7 +21,7 @@ export default function Header({
   onDealChange,
   onDateRangeChange,
 }: HeaderProps) {
-  // console.log(selectedBrand, brands);
+  const router = useRouter();
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
@@ -31,7 +32,10 @@ export default function Header({
               <span className="text-white font-bold text-xs">편털</span>
             </div>
           </div>
-          <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+          <button
+            onClick={() => router.push("/search", { scroll: false })}
+            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+          >
             <svg
               className="w-5 h-5 text-gray-600"
               fill="none"
