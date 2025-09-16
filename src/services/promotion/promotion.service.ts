@@ -15,9 +15,11 @@ export interface FetchPromotionsOptions {
 export class PromotionService {
   //
 
-  static async fetchPromotions(
-    options: FetchPromotionsOptions = {}
-  ): Promise<{ data: Promotion[] | null; error: Error | null; hasMore?: boolean }> {
+  static async fetchPromotions(options: FetchPromotionsOptions = {}): Promise<{
+    data: Promotion[] | null;
+    error: Error | null;
+    hasMore?: boolean;
+  }> {
     try {
       // 기본값 설정
       const {
@@ -52,8 +54,8 @@ export class PromotionService {
       // 날짜 범위 필터 (프로모션이 선택한 기간과 겹치는 경우)
       if (startDate && endDate) {
         query = query
-          .lte("start_date", endDate)  // 프로모션 시작일이 필터 종료일 이전
-          .gte("end_date", startDate);  // 프로모션 종료일이 필터 시작일 이후
+          .lte("start_date", endDate) // 프로모션 시작일이 필터 종료일 이전
+          .gte("end_date", startDate); // 프로모션 종료일이 필터 시작일 이후
       }
 
       // 페이지네이션 적용
@@ -67,7 +69,7 @@ export class PromotionService {
       }
 
       // 더 많은 데이터가 있는지 확인
-      const hasMore = count ? (offset + limit) < count : false;
+      const hasMore = count ? offset + limit < count : false;
 
       return { data: data as Promotion[], error: null, hasMore };
     } catch (error) {
@@ -76,7 +78,7 @@ export class PromotionService {
         data: null,
         error:
           error instanceof Error ? error : new Error("Unknown error occurred"),
-        hasMore: false
+        hasMore: false,
       };
     }
   }
@@ -109,49 +111,36 @@ export class PromotionService {
     }
   }
 
-  static async fetchPromotionsByDateRange(
-    startDate: string,
-    endDate: string
+  static async fetchPopularPromotions(
+    limit: number = 30,
+    daysAgo: number = 0
   ): Promise<{ data: Promotion[] | null; error: Error | null }> {
     try {
-      const { data, error } = await supabase
+      const today = new Date();
+      const startDate = new Date();
+      startDate.setDate(today.getDate() - daysAgo);
+
+      // 현재 진행중인 프로모션 중에서
+      let query = supabase
         .from("promo_with_brand")
         .select(
           "id, brand_name, title, deal_type, start_date, end_date, sale_price, category"
         )
-        .gte("end_date", startDate)
-        .lte("start_date", endDate)
-        .order("start_date", { ascending: false });
+        .gte("end_date", today.toISOString().split("T")[0]) // 종료일이 오늘 이후
+        .lte("start_date", today.toISOString().split("T")[0]); // 시작일이 오늘 이전
 
-      if (error) {
-        console.error("Error fetching promotions by date range:", error);
-        return { data: null, error };
+      // 기간 필터가 있으면 적용
+      if (daysAgo > 0) {
+        query = query.gte("start_date", startDate.toISOString().split("T")[0]);
       }
 
-      return { data: data as Promotion[], error: null };
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      return {
-        data: null,
-        error:
-          error instanceof Error ? error : new Error("Unknown error occurred"),
-      };
-    }
-  }
-
-  static async fetchPopularPromotions(
-    limit: number = 10
-  ): Promise<{ data: Promotion[] | null; error: Error | null }> {
-    try {
-      // 인기 프로모션 로직 (예: 조회수, 좋아요 등 기준)
-      // 현재는 최신 할인율이 높은 순으로 정렬
-      const { data, error } = await supabase
-        .from("promo_with_brand")
-        .select(
-          "id, brand_name, title, deal_type, start_date, end_date, sale_price, category"
-        )
-        .order("sale_price", { ascending: true })
+      // 2+1, 1+1 우선 필터링
+      query = query
+        .in("deal_type", ["TWO_PLUS_ONE", "ONE_PLUS_ONE"])
+        .order("start_date", { ascending: false }) // 최근 시작한 것부터
         .limit(limit);
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching popular promotions:", error);
