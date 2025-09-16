@@ -20,7 +20,7 @@ export default function Header({
   onDealChange,
   onDateRangeChange,
 }: HeaderProps) {
-  console.log(selectedBrand, brands);
+  // console.log(selectedBrand, brands);
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">

@@ -1,85 +1,48 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import { PromotionService } from "@/services/promotion/promotion.service";
-import { Promotion } from "@/types/promotion";
 import PromoCard from "@/components/PromoCard";
-import Loading from "@/components/ui/Loading";
+import PopularClient from "./PopularClient";
 
-export default function PopularPage() {
-  const [promos, setPromos] = useState<Promotion[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [timeFilter, setTimeFilter] = useState<"today" | "week" | "month">(
-    "today"
+interface PopularPageProps {
+  searchParams: Promise<{
+    filter?: string;
+  }>;
+}
+
+export default async function PopularPage({ searchParams }: PopularPageProps) {
+  const params = await searchParams;
+  const timeFilter = (params.filter || "today") as "today" | "week" | "month";
+
+  // 기간별 일수 설정
+  let daysAgo = 0;
+  switch (timeFilter) {
+    case "week":
+      daysAgo = 7;
+      break;
+    case "month":
+      daysAgo = 30;
+      break;
+    default:
+      daysAgo = 0;
+  }
+
+  // 서버에서 데이터 fetching
+  const { data: promos, error } = await PromotionService.fetchPopularPromotions(
+    30,
+    daysAgo
   );
-
-  useEffect(() => {
-    const fetchPopularPromos = async () => {
-      setLoading(true);
-
-      // 기간별 일수 설정
-      let daysAgo = 0;
-      switch (timeFilter) {
-        case "week":
-          daysAgo = 7;
-          break;
-        case "month":
-          daysAgo = 30;
-          break;
-        default:
-          daysAgo = 0; // 오늘
-      }
-
-      const { data } = await PromotionService.fetchPopularPromotions(
-        30,
-        daysAgo
-      );
-
-      setPromos(data || []);
-      setLoading(false);
-    };
-
-    fetchPopularPromos();
-  }, [timeFilter]);
 
   return (
     <>
-      {/* 헤더 */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="px-4 py-3">
           <h1 className="text-lg font-bold text-gray-900">🔥 인기 프로모션</h1>
           <p className="text-xs text-gray-500 mt-0.5">지금 가장 핫한 행사들</p>
         </div>
-
-        {/* 기간 필터 */}
-        <div className="px-4 pb-3">
-          <div className="flex gap-2">
-            {[
-              { id: "today", label: "오늘" },
-              { id: "week", label: "이번주" },
-              { id: "month", label: "이번달" },
-            ].map((filter) => (
-              <button
-                key={filter.id}
-                onClick={() => setTimeFilter(filter.id as typeof timeFilter)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  timeFilter === filter.id
-                    ? "bg-orange-500 text-white"
-                    : "bg-gray-100 text-gray-600"
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <PopularClient initialFilter={timeFilter} />
       </header>
 
-      {/* 콘텐츠 */}
       <main className="px-3 pb-16 pt-3">
-        {loading ? (
-          <Loading />
-        ) : promos.length === 0 ? (
+        {!promos || promos.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
