@@ -1,4 +1,5 @@
 import "@/styles/global.css";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 export default function RootLayout({
   children,
@@ -19,7 +20,12 @@ export default function RootLayout({
           content="black-translucent"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <div className="min-h-screen bg-gray-50 max-w-md mx-auto relative">
+          {children}
+          <BottomNavigation />
+        </div>
+      </body>
     </html>
   );
 }

@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { useInfinitePromotions } from "@/hooks/useInfinitePromotions";
 import Header from "@/components/layout/Header";
 import PromoCard from "@/components/PromoCard";
-import BottomNavigation from "@/components/layout/BottomNavigation";
 import Loading from "@/components/ui/Loading";
 
 export default function Home() {
@@ -55,7 +54,7 @@ export default function Home() {
   }, [hasMore, loadingMore, fetchMore]);
 
   return (
-    <div className="min-h-screen bg-gray-50 max-w-md mx-auto relative">
+    <>
       <Header
         selectedBrand={selectedBrand}
         onBrandChange={setSelectedBrand}
@@ -107,8 +106,6 @@ export default function Home() {
           </>
         )}
       </main>
-
-      <BottomNavigation />
-    </div>
+    </>
   );
 }
