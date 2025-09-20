@@ -3,19 +3,26 @@ import { Promotion } from "@/types/promotion";
 import { PromotionService } from "@/services/promotion/promotion.service";
 
 interface UseInfinitePromotionsOptions {
+  initialData?: Promotion[];
   brandName?: string;
   dealType?: string;
   startDate?: string;
   endDate?: string;
 }
 
-export function useInfinitePromotions(options: UseInfinitePromotionsOptions) {
-  const [promos, setPromos] = useState<Promotion[]>([]);
+export function useInfinitePromotions({
+  initialData,
+  brandName,
+  dealType,
+  startDate,
+  endDate,
+}: UseInfinitePromotionsOptions) {
+  const [promos, setPromos] = useState<Promotion[]>(initialData || []);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(initialData ? 1 : 0);
 
   const ITEMS_PER_PAGE = 5;
 
@@ -25,7 +32,10 @@ export function useInfinitePromotions(options: UseInfinitePromotionsOptions) {
     setError(null);
 
     const { data, error, hasMore } = await PromotionService.fetchPromotions({
-      ...options,
+      brandName: brandName,
+      dealType: dealType,
+      startDate: startDate,
+      endDate: endDate,
       limit: ITEMS_PER_PAGE,
       offset: 0,
     });
@@ -40,7 +50,7 @@ export function useInfinitePromotions(options: UseInfinitePromotionsOptions) {
 
     setPage(1);
     setLoading(false);
-  }, [options.brandName, options.dealType, options.startDate, options.endDate]);
+  }, [brandName, dealType, startDate, endDate]);
 
   // 더 많은 데이터 로드 (스크롤시)
   const fetchMore = useCallback(async () => {
@@ -53,7 +63,10 @@ export function useInfinitePromotions(options: UseInfinitePromotionsOptions) {
       error,
       hasMore: moreAvailable,
     } = await PromotionService.fetchPromotions({
-      ...options,
+      brandName: brandName,
+      dealType: dealType,
+      startDate: startDate,
+      endDate: endDate,
       limit: ITEMS_PER_PAGE,
       offset: page * ITEMS_PER_PAGE,
     });
@@ -67,14 +80,14 @@ export function useInfinitePromotions(options: UseInfinitePromotionsOptions) {
     }
 
     setLoadingMore(false);
-  }, [page, hasMore, loadingMore, options]);
+  }, [page, hasMore, loadingMore, brandName, dealType, startDate, endDate]);
 
   // 필터 변경시 데이터 리셋
   useEffect(() => {
     setPage(0);
     setHasMore(true);
     fetchInitialData();
-  }, [fetchInitialData]);
+  }, [brandName, dealType, startDate, endDate]);
 
   return {
     promos,

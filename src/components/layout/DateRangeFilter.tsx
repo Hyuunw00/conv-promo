@@ -3,20 +3,18 @@ import { useState } from "react";
 import Calendar from "@/components/ui/Calendar";
 
 interface DateRangeFilterProps {
+  initialStartDate: string;
+  initialEndDate: string;
   onDateRangeChange: (startDate: string, endDate: string) => void;
 }
 
 export default function DateRangeFilter({
+  initialStartDate,
+  initialEndDate,
   onDateRangeChange,
 }: DateRangeFilterProps) {
-  const today = new Date();
-  const defaultEndDate = new Date(today);
-  defaultEndDate.setDate(today.getDate() + 14); // 기본 +14일
-
-  const [startDate, setStartDate] = useState(today.toISOString().split("T")[0]);
-  const [endDate, setEndDate] = useState(
-    defaultEndDate.toISOString().split("T")[0]
-  );
+  const [startDate, setStartDate] = useState(initialStartDate);
+  const [endDate, setEndDate] = useState(initialEndDate);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleDateApply = (newStartDate: string, newEndDate: string) => {
@@ -26,8 +24,9 @@ export default function DateRangeFilter({
   };
 
   const formatDateDisplay = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+    // YYYY-MM-DD 형식에서 직접 파싱
+    const [year, month, day] = dateStr.split('-');
+    return `${parseInt(month)}/${parseInt(day)}`;
   };
 
 

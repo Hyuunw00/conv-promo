@@ -12,6 +12,8 @@ interface HeaderProps {
   selectedDeal: string;
   onDealChange: (deal: string) => void;
   onDateRangeChange: (start: string, end: string) => void;
+  initialStartDate: string;
+  initialEndDate: string;
 }
 
 export default function Header({
@@ -20,6 +22,8 @@ export default function Header({
   selectedDeal,
   onDealChange,
   onDateRangeChange,
+  initialStartDate,
+  initialEndDate,
 }: HeaderProps) {
   const router = useRouter();
 
@@ -87,7 +91,11 @@ export default function Header({
       </div>
 
       {/* 날짜 필터 */}
-      <DateRangeFilter onDateRangeChange={onDateRangeChange} />
+      <DateRangeFilter
+        initialStartDate={initialStartDate}
+        initialEndDate={initialEndDate}
+        onDateRangeChange={onDateRangeChange}
+      />
 
       {/* 행사 유형 필터 */}
       <DealTypeFilter selectedDeal={selectedDeal} onDealChange={onDealChange} />
