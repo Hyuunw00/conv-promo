@@ -24,10 +24,10 @@ export default function Client({
     end: defaultEndDate,
   });
 
-  console.log(selectedDateRange);
-  console.log(defaultStartDate, defaultEndDate);
-  console.log(selectedBrand, selectedDeal);
-  console.log(initialData);
+  // console.log(selectedDateRange);
+  // console.log(defaultStartDate, defaultEndDate);
+  // console.log(selectedBrand, selectedDeal);
+  // console.log(initialData);
   return (
     <>
       <Header

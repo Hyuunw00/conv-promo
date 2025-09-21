@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createKSTDate, formatDateString } from "@/utils/date";
 
 interface CalendarProps {
   isOpen: boolean;
@@ -20,12 +21,12 @@ export default function Calendar({
   const modalRef = useRef<HTMLDivElement>(null);
 
   const [tempStartDate, setTempStartDate] = useState<Date | null>(
-    initialStartDate ? new Date(initialStartDate) : null
+    initialStartDate ? createKSTDate(initialStartDate) : null
   );
   const [tempEndDate, setTempEndDate] = useState<Date | null>(
-    initialEndDate ? new Date(initialEndDate) : null
+    initialEndDate ? createKSTDate(initialEndDate) : null
   );
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(createKSTDate());
 
   // 모달 외부 클릭 감지
   useEffect(() => {
@@ -100,8 +101,8 @@ export default function Calendar({
 
   const handleApply = () => {
     if (tempStartDate) {
-      const start = tempStartDate.toISOString().split("T")[0];
-      const end = tempEndDate ? tempEndDate.toISOString().split("T")[0] : start;
+      const start = formatDateString(tempStartDate);
+      const end = tempEndDate ? formatDateString(tempEndDate) : start;
       onApply(start, end);
       onClose();
     }
@@ -237,7 +238,7 @@ export default function Calendar({
             const isInRange = isDateInRange(day);
             const isSelected = isDateSelected(day);
             const isToday =
-              new Date().toDateString() ===
+              createKSTDate().toDateString() ===
               new Date(
                 currentMonth.getFullYear(),
                 currentMonth.getMonth(),

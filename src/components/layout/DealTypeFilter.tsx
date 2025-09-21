@@ -15,7 +15,6 @@ export default function DealTypeFilter({
     { id: "TWO_PLUS_ONE", label: "2+1" },
     { id: "DISCOUNT", label: "할인" },
   ];
-  console.log(selectedDeal);
 
   return (
     <div className="sticky top-[120px] z-40 bg-gray-50 px-3 py-2">

@@ -23,8 +23,6 @@ export default function PromotionList({
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  console.log(initialData);
-  console.log(filters);
   // 무한스크롤 훅 사용 (초기 데이터 전달)
   const { promos, loading, loadingMore, hasMore, fetchMore } =
     useInfinitePromotions({

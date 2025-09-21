@@ -25,10 +25,9 @@ export default function DateRangeFilter({
 
   const formatDateDisplay = (dateStr: string) => {
     // YYYY-MM-DD 형식에서 직접 파싱
-    const [year, month, day] = dateStr.split('-');
+    const [year, month, day] = dateStr.split("-");
     return `${parseInt(month)}/${parseInt(day)}`;
   };
-
 
   return (
     <div className="bg-white border-b border-gray-200">
@@ -55,12 +54,22 @@ export default function DateRangeFilter({
               {formatDateDisplay(startDate)} ~ {formatDateDisplay(endDate)}
             </span>
           </div>
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <svg
+            className="w-4 h-4 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
       </div>
-      
+
       <Calendar
         isOpen={isCalendarOpen}
         onClose={() => setIsCalendarOpen(false)}
