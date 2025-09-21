@@ -3,10 +3,10 @@ import BottomNavigation from "@/components/layout/BottomNavigation";
 
 export default function RootLayout({
   children,
-  search,
+  modal,
 }: Readonly<{
   children: React.ReactNode;
-  search: React.ReactNode;
+  modal: React.ReactNode;
 }>) {
   return (
     <html lang="en">
@@ -25,7 +25,7 @@ export default function RootLayout({
       <body>
         <div className="min-h-screen bg-gray-50 max-w-md mx-auto relative">
           {children}
-          {search}
+          {modal}
           <BottomNavigation />
         </div>
       </body>
