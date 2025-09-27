@@ -14,6 +14,37 @@ export interface SavedPromotion {
 
 export class SavedPromotionService {
   /**
+   * 사용자가 저장한 프로모션 ID 목록만 가져오기
+   * @param userEmail 사용자 이메일
+   * @returns 저장된 프로모션 ID 배열
+   */
+  static async getSavedPromoIds(userEmail: string): Promise<{
+    data: string[] | null;
+    error: Error | null;
+  }> {
+    try {
+      const supabase = await createClient();
+      const { data, error } = await supabase
+        .from('saved_promotions')
+        .select('promo_id')
+        .eq('user_email', userEmail);
+
+      if (error) {
+        console.error('Error loading saved promo ids:', error);
+        return { data: null, error };
+      }
+
+      const ids = data?.map(item => item.promo_id) || [];
+      return { data: ids, error: null };
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error('Unknown error occurred'),
+      };
+    }
+  }
+  /**
    * 사용자의 저장된 프로모션 목록 조회
    * @param userEmail 사용자 이메일
    * @returns 저장된 프로모션 목록

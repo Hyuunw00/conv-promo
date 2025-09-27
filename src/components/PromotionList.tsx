@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useInfinitePromotions } from "@/hooks/useInfinitePromotions";
-import PromoCard from "@/components/PromoCard";
+import PromoCardEnhanced from "@/components/PromoCardEnhanced";
 import Loading from "@/components/ui/Loading";
 import { Promotion } from "@/types/promotion";
+import { getCurrentUser } from "@/lib/auth";
+import { toggleSavePromo } from "@/app/actions/saved-actions";
 
 interface PromotionListProps {
   initialData: Promotion[];
@@ -22,6 +24,10 @@ export default function PromotionList({
 }: PromotionListProps) {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<any>(null);
+  const [savedPromoIds, setSavedPromoIds] = useState<Set<string>>(new Set());
+
+  console.log("savedPromoIds", savedPromoIds);
 
   // 무한스크롤 훅 사용 (초기 데이터 전달)
   const { promos, loading, loadingMore, hasMore, fetchMore } =
@@ -29,6 +35,58 @@ export default function PromotionList({
       initialData,
       ...filters,
     });
+
+  // 사용자 정보 및 저장된 프로모션 확인
+  useEffect(() => {
+    const checkUser = async () => {
+      const { user: currentUser } = await getCurrentUser();
+      setUser(currentUser);
+
+      // 저장된 프로모션 목록 가져오기
+      if (currentUser?.email) {
+        try {
+          const response = await fetch("/api/saved/ids");
+          const result = await response.json();
+
+          if (result.data && Array.isArray(result.data)) {
+            const savedSet = new Set(result.data);
+            setSavedPromoIds(savedSet as Set<string>);
+          }
+        } catch (error) {
+          console.error("Error fetching saved promo ids:", error);
+        }
+      }
+    };
+    checkUser();
+  }, []); // filters를 dependency에서 제거하여 필터 변경 시에도 유지
+
+  // 저장 토글 핸들러
+  const handleSaveToggle = useCallback(
+    async (promoId: string) => {
+      if (!user?.email) {
+        alert("로그인이 필요합니다.");
+        return;
+      }
+
+      try {
+        const result = await toggleSavePromo(user.email, promoId);
+        if (result.success) {
+          setSavedPromoIds((prev) => {
+            const newSet = new Set(prev);
+            if (result.saved) {
+              newSet.add(promoId);
+            } else {
+              newSet.delete(promoId);
+            }
+            return newSet;
+          });
+        }
+      } catch (error) {
+        console.error("Error toggling save:", error);
+      }
+    },
+    [user]
+  );
 
   // Intersection Observer 설정
   useEffect(() => {
@@ -83,7 +141,12 @@ export default function PromotionList({
     <>
       <div className="space-y-3">
         {promos.map((promo) => (
-          <PromoCard key={promo.id} promotion={promo} />
+          <PromoCardEnhanced
+            key={promo.id}
+            promotion={promo}
+            isSaved={savedPromoIds.has(promo.id)}
+            onSaveToggle={handleSaveToggle}
+          />
         ))}
       </div>
 

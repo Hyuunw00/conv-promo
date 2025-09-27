@@ -42,7 +42,7 @@ export class PromotionService {
       let query = supabase
         .from("promo_with_brand")
         .select(
-          "id, brand_name, title, deal_type, start_date, end_date, sale_price, category",
+          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url",
           { count: "exact" }
         )
         .order(orderBy, { ascending });
@@ -102,7 +102,7 @@ export class PromotionService {
       const { data, error } = await supabase
         .from("promo_with_brand")
         .select(
-          "id, brand_name, title, deal_type, start_date, end_date, sale_price, category, image_url, source_url"
+          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url"
         )
         .eq("id", id)
         .single();
@@ -142,7 +142,7 @@ export class PromotionService {
       const { data, error } = await supabase
         .from("promo_with_brand")
         .select(
-          "id, brand_name, title, deal_type, start_date, end_date, sale_price, category"
+          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url"
         )
         .or(
           `title.ilike.%${query}%,category.ilike.%${query}%,brand_name.ilike.%${query}%`
@@ -229,7 +229,7 @@ export class PromotionService {
       let query = supabase
         .from("promo_with_brand")
         .select(
-          "id, brand_name, title, deal_type, start_date, end_date, sale_price, category"
+          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url"
         )
         .gte("end_date", today.toISOString().split("T")[0]) // 종료일이 오늘 이후
         .lte("start_date", today.toISOString().split("T")[0]); // 시작일이 오늘 이전
