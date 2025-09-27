@@ -2,13 +2,14 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 
 export default function CallbackPage() {
   const router = useRouter();
 
   useEffect(() => {
     const handleCallback = async () => {
+      const supabase = createClient();
       // URL에서 코드 가져오기
       const { data: { session }, error } = await supabase.auth.getSession();
       

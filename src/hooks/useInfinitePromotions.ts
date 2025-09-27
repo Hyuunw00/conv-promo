@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { Promotion } from "@/types/promotion";
-import { PromotionService } from "@/services/promotion/promotion.service";
 
 interface UseInfinitePromotionsOptions {
   initialData?: Promotion[];
@@ -31,21 +30,27 @@ export function useInfinitePromotions({
     setLoading(true);
     setError(null);
 
-    const { data, error, hasMore } = await PromotionService.fetchPromotions({
-      brandName: brandName,
-      dealType: dealType,
-      startDate: startDate,
-      endDate: endDate,
-      limit: ITEMS_PER_PAGE,
-      offset: 0,
-    });
+    try {
+      const params = new URLSearchParams();
+      if (brandName) params.append('brandName', brandName);
+      if (dealType) params.append('dealType', dealType);
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      params.append('limit', String(ITEMS_PER_PAGE));
+      params.append('offset', '0');
 
-    if (error) {
-      setError(error);
+      const response = await fetch(`/api/promotions?${params}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch promotions');
+      }
+
+      setPromos(result.data || []);
+      setHasMore(result.hasMore || false);
+    } catch (error) {
+      setError(error as Error);
       setPromos([]);
-    } else {
-      setPromos(data || []);
-      setHasMore(hasMore || false);
     }
 
     setPage(1);
@@ -58,25 +63,29 @@ export function useInfinitePromotions({
 
     setLoadingMore(true);
 
-    const {
-      data,
-      error,
-      hasMore: moreAvailable,
-    } = await PromotionService.fetchPromotions({
-      brandName: brandName,
-      dealType: dealType,
-      startDate: startDate,
-      endDate: endDate,
-      limit: ITEMS_PER_PAGE,
-      offset: page * ITEMS_PER_PAGE,
-    });
+    try {
+      const params = new URLSearchParams();
+      if (brandName) params.append('brandName', brandName);
+      if (dealType) params.append('dealType', dealType);
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      params.append('limit', String(ITEMS_PER_PAGE));
+      params.append('offset', String(page * ITEMS_PER_PAGE));
 
-    if (error) {
-      setError(error);
-    } else if (data) {
-      setPromos((prev) => [...prev, ...data]);
-      setHasMore(moreAvailable || false);
-      setPage((prev) => prev + 1);
+      const response = await fetch(`/api/promotions?${params}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch more promotions');
+      }
+
+      if (result.data) {
+        setPromos((prev) => [...prev, ...result.data]);
+        setHasMore(result.hasMore || false);
+        setPage((prev) => prev + 1);
+      }
+    } catch (error) {
+      setError(error as Error);
     }
 
     setLoadingMore(false);

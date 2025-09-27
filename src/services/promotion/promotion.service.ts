@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { Promotion } from "@/types/promotion";
 
 export interface FetchPromotionsOptions {
@@ -26,6 +26,7 @@ export class PromotionService {
     hasMore?: boolean;
   }> {
     try {
+      const supabase = await createClient();
       // 기본값 설정
       const {
         limit = 20,
@@ -97,6 +98,7 @@ export class PromotionService {
     id: string
   ): Promise<{ data: Promotion | null; error: Error | null }> {
     try {
+      const supabase = await createClient();
       const { data, error } = await supabase
         .from("promo_with_brand")
         .select(
@@ -136,6 +138,7 @@ export class PromotionService {
         return { data: [], error: null };
       }
 
+      const supabase = await createClient();
       const { data, error } = await supabase
         .from("promo_with_brand")
         .select(
@@ -178,6 +181,7 @@ export class PromotionService {
         return { data: [], error: null };
       }
 
+      const supabase = await createClient();
       const { data, error } = await supabase
         .from("promo_with_brand")
         .select("title")
@@ -216,6 +220,7 @@ export class PromotionService {
     daysAgo: number = 0
   ): Promise<{ data: Promotion[] | null; error: Error | null }> {
     try {
+      const supabase = await createClient();
       const today = new Date();
       const startDate = new Date();
       startDate.setDate(today.getDate() - daysAgo);
