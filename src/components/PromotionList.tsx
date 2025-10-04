@@ -27,8 +27,6 @@ export default function PromotionList({
   const [user, setUser] = useState<any>(null);
   const [savedPromoIds, setSavedPromoIds] = useState<Set<string>>(new Set());
 
-  console.log("savedPromoIds", savedPromoIds);
-
   // 무한스크롤 훅 사용 (초기 데이터 전달)
   const { promos, loading, loadingMore, hasMore, fetchMore } =
     useInfinitePromotions({

@@ -11,7 +11,7 @@ export default async function Home() {
   const startDate = getKSTDateString(today);
   const endDate = getKSTDateString(defaultEndDate);
 
-  const { data: initialData } = await PromotionService.fetchPromotions({
+  const { data: initialData, error } = await PromotionService.fetchPromotions({
     limit: 5,
     offset: 0,
     brandName: "ALL",
