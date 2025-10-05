@@ -54,4 +54,5 @@ crawler/.env
 crawler/logs/
 *.log
 crawler/*_sample_data.json
+crawler/data/
 

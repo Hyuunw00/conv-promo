@@ -1,20 +1,17 @@
 # 웹 크롤링 관련
-requests==2.31.0          # HTTP 요청 (API 호출, 이미지 다운로드 등)
-beautifulsoup4==4.12.3    # HTML 파싱 (정적 페이지 크롤링)
-selenium==4.18.1          # 동적 페이지 크롤링 (JavaScript 렌더링)
-webdriver-manager==4.0.1  # Chrome 드라이버 자동 관리
-
-# 데이터 처리
-pandas==2.2.0             # 데이터 정제 및 중복 제거
+requests>=2.31.0
+beautifulsoup4>=4.12.3
+selenium>=4.18.1
+webdriver-manager>=4.0.1
 
 # Supabase 연동
-supabase==2.3.4           # Supabase 클라이언트 (DB 저장, 이미지 업로드)
+supabase>=2.3.4
 
 # 이미지 처리
-Pillow==10.2.0            # 이미지 다운로드, 리사이징, 최적화
+Pillow>=10.2.0
 
 # 환경변수 관리
-python-dotenv==1.0.1      # .env 파일에서 환경변수 로드
+python-dotenv>=1.0.1
 
 # 유틸리티
-python-dateutil==2.8.2    # 날짜 파싱 및 변환
+python-dateutil>=2.8.2

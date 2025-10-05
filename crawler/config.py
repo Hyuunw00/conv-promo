@@ -12,7 +12,8 @@ load_dotenv()
 
 # Supabase 설정
 SUPABASE_URL = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
-SUPABASE_KEY = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+# 크롤러는 서비스 롤 키를 사용 (RLS 우회 필요)
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 
 # 크롤링 설정
 CRAWL_DELAY = float(os.getenv("CRAWL_DELAY", "1.0"))

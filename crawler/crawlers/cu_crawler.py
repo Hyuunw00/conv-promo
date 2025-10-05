@@ -130,11 +130,29 @@ class CUCrawler(BaseCrawler):
         else:
             deal_type = 'DISCOUNT'
 
-        # 상품 링크
+        # 상품 ID 추출 (상세 페이지 크롤링용)
         link_elem = item.select_one('a')
-        source_url = link_elem.get('href') if link_elem else None
-        if source_url and not source_url.startswith('http'):
-            source_url = self.BASE_URL + source_url
+        onclick = link_elem.get('href') if link_elem else None
+        product_id = None
+        if onclick and 'view(' in onclick:
+            # javascript:view(690); 형태에서 ID 추출
+            match = re.search(r'view\((\d+)\)', onclick)
+            if match:
+                product_id = match.group(1)
+
+        # 상세 페이지에서 추가 정보 수집 (카테고리, 바코드 등)
+        category = None
+        barcode = None
+        description = None
+
+        if product_id:
+            detail_info = self._fetch_product_detail(product_id)
+            category = detail_info.get('category')
+            barcode = detail_info.get('barcode')
+            description = detail_info.get('description')
+
+        # 상품 링크 생성
+        source_url = f"{self.BASE_URL}/product/view.do?category=product&gdIdx={product_id}" if product_id else None
 
         # 행사 기간 설정 (당월 1일 ~ 말일)
         now = datetime.now()
@@ -150,11 +168,64 @@ class CUCrawler(BaseCrawler):
             'sale_price': price,
             'image_url': image_url,
             'source_url': source_url,
-            'category': None,  # CU에서 카테고리 제공 안 함
+            'category': category,
             'start_date': start_date,  # 당월 1일
             'end_date': last_day,       # 당월 말일
-            'barcode': None,
+            'barcode': barcode,
+            'description': description,  # 추가 정보
         }
+
+    def _fetch_product_detail(self, product_id: str) -> Dict[str, Any]:
+        """
+        상품 상세 페이지에서 추가 정보 수집
+
+        Args:
+            product_id: 상품 ID
+
+        Returns:
+            카테고리, 바코드 등 추가 정보
+        """
+        try:
+            detail_url = f"{self.BASE_URL}/product/view.do?category=product&gdIdx={product_id}"
+            response = self._request(detail_url)
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # 카테고리(태그) 정보 추출
+            category_tags = []
+            tag_list = soup.select('#taglist li')
+            for tag in tag_list:
+                tag_text = tag.text.strip()
+                if tag_text:
+                    category_tags.append(tag_text)
+
+            # 첫 번째 태그를 메인 카테고리로 사용
+            category = category_tags[0] if category_tags else None
+
+            # 바코드 정보 (이미지 파일명에서 추출)
+            barcode = None
+            img_elem = soup.select_one('.prodDetail-w img')
+            if img_elem:
+                img_src = img_elem.get('src', '')
+                # 이미지 파일명이 바코드인 경우가 많음 (예: 8801047161677.png)
+                match = re.search(r'/(\d{13,14})\.', img_src)
+                if match:
+                    barcode = match.group(1)
+
+            # 상품 설명
+            description = None
+            desc_elem = soup.select_one('.prodExplain li')
+            if desc_elem:
+                description = desc_elem.text.strip()
+
+            return {
+                'category': category,
+                'barcode': barcode,
+                'description': description,
+            }
+
+        except Exception as e:
+            self.logger.warning(f"Failed to fetch detail for product {product_id}: {e}")
+            return {'category': None, 'barcode': None, 'description': None}
 
     def _parse_price(self, price_text: str) -> int:
         """
