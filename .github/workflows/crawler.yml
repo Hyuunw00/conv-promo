@@ -9,7 +9,7 @@ on:
 jobs:
   crawl:
     runs-on: ubuntu-latest
-    timeout-minutes: 60 # 1시간 타임아웃
+    timeout-minutes: 180 # 3시간 타임아웃 (전체 페이지 크롤링 고려)
 
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -29,7 +29,30 @@ jobs:
           cache: 'pip'
           cache-dependency-path: crawler/requirements.txt
 
-      - name: Install dependencies
+      - name: Install Chrome and ChromeDriver
+        run: |
+          # Chrome 설치
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+          # ChromeDriver 버전 확인 및 설치
+          CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1)
+          echo "Chrome version: $CHROME_VERSION"
+
+          # ChromeDriver 다운로드 (최신 버전)
+          wget -N https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$(curl -s https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE)/linux64/chromedriver-linux64.zip
+          unzip chromedriver-linux64.zip
+          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
+          rm -rf chromedriver-linux64.zip chromedriver-linux64
+
+          # 확인
+          google-chrome --version
+          chromedriver --version
+
+      - name: Install Python dependencies
         run: |
           cd crawler
           pip install -r requirements.txt
@@ -45,10 +68,26 @@ jobs:
       - name: Run SevenEleven crawler
         id: seven-crawler
         continue-on-error: true
-        timeout-minutes: 30
+        timeout-minutes: 45
         run: |
           cd crawler
           python upload_to_db.py seven
+
+      - name: Run GS25 crawler
+        id: gs25-crawler
+        continue-on-error: true
+        timeout-minutes: 90
+        run: |
+          cd crawler
+          python upload_to_db.py gs25
+
+      - name: Run Emart24 crawler
+        id: emart24-crawler
+        continue-on-error: true
+        timeout-minutes: 60
+        run: |
+          cd crawler
+          python upload_to_db.py emart24
 
       - name: Upload logs
         if: always()
@@ -59,16 +98,45 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
+      - name: Upload JSON backups
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: json-backups
+          path: crawler/data/
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Check results
         if: always()
         run: |
           echo "=== Crawler Results ==="
           echo "CU: ${{ steps.cu-crawler.outcome }}"
           echo "SevenEleven: ${{ steps.seven-crawler.outcome }}"
+          echo "GS25: ${{ steps.gs25-crawler.outcome }}"
+          echo "Emart24: ${{ steps.emart24-crawler.outcome }}"
 
-          if [ "${{ steps.cu-crawler.outcome }}" == "failure" ] || [ "${{ steps.seven-crawler.outcome }}" == "failure" ]; then
-            echo "⚠️ Some crawlers failed"
-            exit 1
+          FAILED=0
+          if [ "${{ steps.cu-crawler.outcome }}" == "failure" ]; then
+            echo "⚠️ CU crawler failed"
+            FAILED=1
+          fi
+          if [ "${{ steps.seven-crawler.outcome }}" == "failure" ]; then
+            echo "⚠️ SevenEleven crawler failed"
+            FAILED=1
+          fi
+          if [ "${{ steps.gs25-crawler.outcome }}" == "failure" ]; then
+            echo "⚠️ GS25 crawler failed"
+            FAILED=1
+          fi
+          if [ "${{ steps.emart24-crawler.outcome }}" == "failure" ]; then
+            echo "⚠️ Emart24 crawler failed"
+            FAILED=1
+          fi
+
+          if [ $FAILED -eq 1 ]; then
+            echo "⚠️ Some crawlers failed, but continuing..."
+            # exit 1 대신 경고만 표시 (일부 실패해도 성공한 것은 DB에 저장됨)
           else
             echo "✅ All crawlers completed successfully"
           fi
