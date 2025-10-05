@@ -10,6 +10,7 @@ import {
   Barcode,
   ExternalLink,
   Package,
+  Users,
 } from "lucide-react";
 import { Promotion } from "@/types/promotion";
 import { fmtDate } from "@/utils/date";
@@ -23,6 +24,7 @@ interface PromoCardEnhancedProps {
     barcode?: string;
     source_url?: string;
     raw_title?: string;
+    description?: string;
   };
   isSaved?: boolean;
   onSaveToggle?: (promoId: string) => void;
@@ -65,11 +67,11 @@ export default function PromoCardEnhanced({
     <article className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden">
       {/* 이미지 섹션 */}
       {promotion.image_url && (
-        <div className="relative h-48 bg-gray-100">
+        <div className="relative bg-gray-100">
           <img
             src={promotion.image_url}
             alt={promotion.title}
-            className="w-full h-full object-cover"
+            className="w-full h-auto object-contain"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
@@ -88,6 +90,12 @@ export default function PromoCardEnhanced({
           <BrandBadge brandName={promotion.brand_name} />
           <div className="flex items-center gap-2">
             <DealBadge dealType={promotion.deal_type} />
+            {promotion.saved_count && promotion.saved_count > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-pink-50 text-pink-600 rounded-full text-xs font-medium">
+                <Users className="w-3 h-3" />
+                {promotion.saved_count}
+              </span>
+            )}
             <button
               onClick={handleHeartClick}
               className={`p-1.5 rounded-full transition-all ${
@@ -124,17 +132,27 @@ export default function PromoCardEnhanced({
         </div>
 
         {/* 기본 정보 */}
-        <div className="flex flex-wrap gap-2 mb-3">
-          {promotion.category && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-              <Package className="w-3 h-3" />
-              {promotion.category}
+        <div className="space-y-2 mb-3">
+          {/* 카테고리 + 기간 */}
+          <div className="flex flex-wrap gap-2">
+            {promotion.category && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                <Package className="w-3 h-3" />
+                {promotion.category}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs">
+              <Calendar className="w-3 h-3" />
+              {fmtDate(promotion.start_date)} ~ {fmtDate(promotion.end_date)}
             </span>
+          </div>
+
+          {/* 상품 설명 (중량 등) */}
+          {promotion.description && (
+            <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1.5 rounded">
+              {promotion.description}
+            </div>
           )}
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs">
-            <Calendar className="w-3 h-3" />
-            {fmtDate(promotion.start_date)} ~ {fmtDate(promotion.end_date)}
-          </span>
         </div>
 
         {/* 확장/축소 버튼 */}
