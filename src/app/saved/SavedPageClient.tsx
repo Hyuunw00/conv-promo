@@ -7,9 +7,32 @@ import Link from "next/link";
 import Loading from "@/components/ui/Loading";
 import { createClient } from "@/lib/supabase/client";
 import { usePromotionList } from "@/hooks/usePromotionList";
+import { Promotion } from "@/types/promotion";
+
+interface SavedPromotionItem {
+  promo_id: string;
+  promo: {
+    id: string;
+    title: string;
+    raw_title: string;
+    deal_type: string;
+    normal_price: number;
+    sale_price: number;
+    start_date: string;
+    end_date: string;
+    image_url: string;
+    barcode: string | null;
+    source_url: string;
+    description: string | null;
+    category: string | null;
+    brand: {
+      name: string;
+    } | null;
+  } | null;
+}
 
 interface SavedPageClientProps {
-  initialPromos: any[];
+  initialPromos: Promotion[];
   totalCount: number;
   userEmail: string;
 }
@@ -70,16 +93,29 @@ export default function SavedPageClient({
 
       if (error) throw error;
 
-      const newPromos =
-        data
-          ?.map((item: any) => {
+      const newPromos = (
+        (data as unknown as SavedPromotionItem[])
+          ?.map((item) => {
             if (!item.promo) return null;
+            const promo = item.promo;
             return {
-              ...item.promo,
-              brand_name: item.promo.brand?.name,
-            };
+              id: promo.id,
+              brand_name: promo.brand?.name || "",
+              title: promo.title,
+              deal_type: promo.deal_type,
+              start_date: promo.start_date,
+              end_date: promo.end_date,
+              sale_price: promo.sale_price,
+              normal_price: promo.normal_price,
+              image_url: promo.image_url,
+              barcode: promo.barcode || undefined,
+              source_url: promo.source_url,
+              raw_title: promo.raw_title,
+              category: promo.category || undefined,
+            } as Promotion;
           })
-          .filter(Boolean) || [];
+          .filter((item): item is Promotion => item !== null) || []
+      ) as Promotion[];
 
       return {
         data: newPromos,

@@ -7,6 +7,7 @@ import Loading from "@/components/ui/Loading";
 import { Promotion } from "@/types/promotion";
 import { getCurrentUser } from "@/lib/auth";
 import { toggleSavePromo } from "@/app/actions/saved-actions";
+import { User } from "@supabase/supabase-js";
 
 interface PromotionListProps {
   initialData: Promotion[];
@@ -25,7 +26,7 @@ export default function PromotionList({
 }: PromotionListProps) {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [savedPromoIds, setSavedPromoIds] = useState<Set<string>>(new Set());
 
   // 무한스크롤 훅 사용 (초기 데이터 전달)

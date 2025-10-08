@@ -13,4 +13,5 @@ export interface Promotion {
   barcode?: string;
   source_url?: string;
   raw_title?: string;
+  saved_count?: number;
 }

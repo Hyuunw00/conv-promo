@@ -81,7 +81,7 @@ export class SavedPromotionService {
       }
 
       // 데이터 형식 변환
-      const formattedData = data?.map(item => item.promo as SavedPromotion) || [];
+      const formattedData = data?.map(item => item.promo as unknown as SavedPromotion) || [];
       return { data: formattedData, error: null };
     } catch (error) {
       console.error('Unexpected error:', error);

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Promotion } from "@/types/promotion";
 import { getCurrentUser } from "@/lib/auth";
 import { toggleSavePromo } from "@/app/actions/saved-actions";
+import { User } from "@supabase/supabase-js";
 
 interface UsePromotionListOptions {
   initialData?: Promotion[];
@@ -28,7 +29,7 @@ export function usePromotionList({
   const [loading, setLoading] = useState(false);
 
   // 저장 기능 상태
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [savedPromoIds, setSavedPromoIds] = useState<Set<string>>(new Set());
 
   // 무한스크롤 ref
