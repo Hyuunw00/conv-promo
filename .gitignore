@@ -40,6 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# pwa / service worker
+/public/sw.js
+/public/swe-worker-*.js
+
 # claude
 CLAUDE.md
 
