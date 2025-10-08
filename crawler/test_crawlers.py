@@ -5,7 +5,7 @@
 """
 import json
 from crawlers.cu_crawler import CUCrawler
-from crawlers.seven_crawler import SevenElevenCrawler
+from crawlers.seveneleven_crawler import SevenElevenCrawler
 
 def test_cu():
     """CU 크롤러 테스트"""

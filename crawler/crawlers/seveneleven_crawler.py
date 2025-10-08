@@ -125,10 +125,34 @@ class SevenElevenCrawler(BaseCrawler):
         if image_url and not image_url.startswith('http'):
             image_url = self.BASE_URL + image_url
 
-        # 가격
-        price_elem = item.select_one('.price_list span') or item.select_one('.price span')
-        price_text = price_elem.text.strip() if price_elem else None
-        price = self._parse_price(price_text)
+        # 가격 정보 추출
+        # HTML 구조: <span class="product_price"><del>정상가</del><strong>할인가</strong><span>원</span></span>
+
+        # 원본 가격 (del 태그)
+        normal_price_elem = item.select_one('del')
+        normal_price = self._parse_price(normal_price_elem.text) if normal_price_elem else None
+
+        # 할인 가격 (strong 태그 또는 일반 가격)
+        sale_price = None
+        price_container = item.select_one('.product_price')
+
+        if price_container:
+            strong_elem = price_container.select_one('strong')
+            if strong_elem:
+                # hide 클래스 제거 후 텍스트 추출
+                hide_spans = strong_elem.select('.hide')
+                for span in hide_spans:
+                    span.decompose()
+                sale_price = self._parse_price(strong_elem.get_text(strip=True))
+
+        # strong 태그가 없으면 일반 가격에서 추출
+        if not sale_price:
+            sale_price_elem = item.select_one('.price span')
+            sale_price = self._parse_price(sale_price_elem.text) if sale_price_elem else None
+
+        # 원본 가격이 없으면 (1+1, 2+1의 경우) sale_price를 normal_price로도 설정
+        if not normal_price:
+            normal_price = sale_price
 
         # 행사 타입 (태그에서 추출)
         tag_elem = item.select_one('.tag_list_01 li') or item.select_one('.ico_tag')
@@ -166,6 +190,16 @@ class SevenElevenCrawler(BaseCrawler):
 
             barcode = detail_info.get('barcode')
 
+            # 상세 페이지에서 가격 정보 가져오기 (할인 상품의 경우 정상가가 있음)
+            detail_normal_price = detail_info.get('normal_price')
+            detail_sale_price = detail_info.get('sale_price')
+
+            # 상세 페이지에 가격 정보가 있으면 우선 사용
+            if detail_normal_price:
+                normal_price = detail_normal_price
+            if detail_sale_price:
+                sale_price = detail_sale_price
+
         # 상품 링크 생성 (POST 방식이지만 URL은 표시용)
         source_url = f"{self.BASE_URL}/product/presentView.asp?pCd={product_id}" if product_id else None
 
@@ -178,8 +212,8 @@ class SevenElevenCrawler(BaseCrawler):
             'title': title,
             'raw_title': title,
             'deal_type': deal_type,
-            'normal_price': price,
-            'sale_price': price,
+            'normal_price': normal_price,
+            'sale_price': sale_price,
             'image_url': image_url,
             'source_url': source_url,
             'category': None,  # 세븐일레븐은 카테고리 정보 없음
@@ -197,7 +231,7 @@ class SevenElevenCrawler(BaseCrawler):
             product_id: 상품 ID
 
         Returns:
-            중량, 바코드, 설명 등 추가 정보
+            중량, 바코드, 설명, 정상가, 할인가 등 추가 정보
         """
         try:
             detail_url = f"{self.BASE_URL}/product/presentView.asp"
@@ -229,15 +263,37 @@ class SevenElevenCrawler(BaseCrawler):
                 if match:
                     barcode = match.group(1)
 
+            # 가격 정보 (상세 페이지에서 추출)
+            # HTML 구조: <span class="product_price"><del>정상가</del><strong>할인가</strong></span>
+            normal_price = None
+            sale_price = None
+
+            price_container = soup.select_one('.product_price')
+            if price_container:
+                # 정상가 (del 태그)
+                del_elem = price_container.select_one('del')
+                if del_elem:
+                    normal_price = self._parse_price(del_elem.text)
+
+                # 할인가 (strong 태그)
+                strong_elem = price_container.select_one('strong')
+                if strong_elem:
+                    # hide 클래스 제거
+                    for hide in strong_elem.select('.hide'):
+                        hide.decompose()
+                    sale_price = self._parse_price(strong_elem.get_text(strip=True))
+
             return {
                 'description': description,
                 'weight': weight,
                 'barcode': barcode,
+                'normal_price': normal_price,
+                'sale_price': sale_price,
             }
 
         except Exception as e:
             self.logger.warning(f"Failed to fetch detail for product {product_id}: {e}")
-            return {'description': None, 'weight': None, 'barcode': None}
+            return {'description': None, 'weight': None, 'barcode': None, 'normal_price': None, 'sale_price': None}
 
     def _parse_deal_type(self, tag_text: str) -> str:
         """
