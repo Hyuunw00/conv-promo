@@ -298,7 +298,7 @@ export default function SearchModal() {
                       />
                     </svg>
                     <p className="text-gray-500">
-                      "{searchQuery}" 검색 결과가 없습니다
+                      &quot;{searchQuery}&quot; 검색 결과가 없습니다
                     </p>
                   </div>
                 )
