@@ -32,7 +32,6 @@ export default function PopularClient({
   const {
     promos,
     loadingMore,
-    hasMore,
     loadMoreRef,
     savedPromoIds,
     handleSaveToggle,
@@ -47,10 +46,13 @@ export default function PopularClient({
 
       return {
         data: result.data || [],
-        hasMore: result.data?.length === 10,
+        hasMore: result.data?.length === 10 && (page + 1) * 10 < 30,
       };
     },
   });
+
+  // 30위까지만 표시
+  const displayedPromos = promos.slice(0, 30);
 
   const handleFilterChange = (filterId: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -78,8 +80,8 @@ export default function PopularClient({
   return (
     <>
       {/* 필터 버튼 */}
-      <div className="px-4 pb-3">
-        <div className="flex gap-2">
+      <div className="px-4 py-4 bg-gradient-to-b from-white to-gray-50">
+        <div className="flex gap-3 justify-center">
           {[
             { id: "today", label: "오늘" },
             { id: "week", label: "이번주" },
@@ -88,10 +90,10 @@ export default function PopularClient({
             <button
               key={filter.id}
               onClick={() => handleFilterChange(filter.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all shadow-sm ${
                 timeFilter === filter.id
-                  ? "bg-orange-500 text-white"
-                  : "bg-gray-100 text-gray-600"
+                  ? "bg-orange-500 text-white shadow-orange-200"
+                  : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
               }`}
             >
               {filter.label}
@@ -102,7 +104,7 @@ export default function PopularClient({
 
       {/* 프로모션 리스트 */}
       <main className="px-3 pb-16 pt-3">
-        {promos.length === 0 ? (
+        {displayedPromos.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
@@ -124,24 +126,24 @@ export default function PopularClient({
         ) : (
           <>
             <div className="space-y-3">
-              {promos.map((promo, index) => (
+              {displayedPromos.map((promo, index) => (
                 <div key={promo.id} className="relative">
-                  {/* 순위 뱃지 */}
-                  {index < 3 && (
-                    <div className="absolute -top-2 -left-2 z-10">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                          index === 0
-                            ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-white"
-                            : index === 1
-                            ? "bg-gradient-to-br from-gray-300 to-gray-400 text-white"
-                            : "bg-gradient-to-br from-orange-400 to-orange-600 text-white"
-                        }`}
-                      >
-                        {index + 1}
-                      </div>
+                  {/* 순위 뱃지 - 모든 순위 표시 */}
+                  <div className="absolute -top-2 -left-2 z-10">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md ${
+                        index === 0
+                          ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-yellow-200"
+                          : index === 1
+                          ? "bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-gray-200"
+                          : index === 2
+                          ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-orange-200"
+                          : "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-200"
+                      }`}
+                    >
+                      {index + 1}
                     </div>
-                  )}
+                  </div>
                   <PromoCardEnhanced
                     promotion={promo}
                     isSaved={savedPromoIds.has(promo.id)}
@@ -152,14 +154,20 @@ export default function PopularClient({
             </div>
 
             {/* 무한스크롤 트리거 */}
-            <div ref={loadMoreRef} className="py-4">
-              {loadingMore && <Loading />}
-              {!hasMore && promos.length > 0 && (
-                <p className="text-center text-gray-500 text-sm">
-                  모든 프로모션을 불러왔습니다
+            {displayedPromos.length < 30 && (
+              <div ref={loadMoreRef} className="py-4">
+                {loadingMore && <Loading />}
+              </div>
+            )}
+
+            {/* 30위 도달 메시지 */}
+            {displayedPromos.length >= 30 && (
+              <div className="py-8 text-center">
+                <p className="text-gray-500 text-sm">
+                  🏆 TOP 30 프로모션을 모두 확인했습니다
                 </p>
-              )}
-            </div>
+              </div>
+            )}
           </>
         )}
       </main>
