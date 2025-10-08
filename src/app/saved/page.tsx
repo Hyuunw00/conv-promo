@@ -16,9 +16,11 @@ export default async function SavedPage() {
     redirect("/auth/login");
   }
 
-  const { data: savedPromos } = await SavedPromotionService.getSavedPromotions(
+  // 초기 데이터만 가져오기 (10개)
+  const { data: allSavedPromos } = await SavedPromotionService.getSavedPromotions(
     user.email
   );
+  const initialPromos = allSavedPromos?.slice(0, 10) || [];
 
   return (
     <>
@@ -39,8 +41,8 @@ export default async function SavedPage() {
                   저장한 프로모션
                 </h1>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {savedPromos && savedPromos.length > 0
-                    ? `${savedPromos.length}개의 프로모션을 저장했어요`
+                  {allSavedPromos && allSavedPromos.length > 0
+                    ? `${allSavedPromos.length}개의 프로모션을 저장했어요`
                     : "나중에 보고 싶은 프로모션을 저장하세요"}
                 </p>
               </div>
@@ -51,7 +53,8 @@ export default async function SavedPage() {
 
       {/* 콘텐츠 섹션 */}
       <SavedPageClient
-        savedPromos={savedPromos || []}
+        initialPromos={initialPromos}
+        totalCount={allSavedPromos?.length || 0}
         userEmail={user.email!}
       />
     </>

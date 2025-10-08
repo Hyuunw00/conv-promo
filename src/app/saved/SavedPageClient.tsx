@@ -2,69 +2,139 @@
 
 import { useState, useCallback } from "react";
 import PromoCardEnhanced from "@/components/PromoCardEnhanced";
-import { toggleSavePromo } from "@/app/actions/saved-actions";
 import { Heart } from "lucide-react";
 import Link from "next/link";
+import Loading from "@/components/ui/Loading";
+import { createClient } from "@/lib/supabase/client";
+import { usePromotionList } from "@/hooks/usePromotionList";
 
 interface SavedPageClientProps {
-  savedPromos: any[];
+  initialPromos: any[];
+  totalCount: number;
   userEmail: string;
 }
 
 export default function SavedPageClient({
-  savedPromos: initialPromos,
+  initialPromos,
+  totalCount,
   userEmail,
 }: SavedPageClientProps) {
-  const [savedPromoIds, setSavedPromoIds] = useState<Set<string>>(
-    new Set(initialPromos.map((p) => p.id))
-  );
+  const ITEMS_PER_PAGE = 10;
 
-  // 저장 토글 핸들러
+  // 통합 훅 사용
+  const {
+    promos,
+    loadingMore,
+    hasMore,
+    loadMoreRef,
+    savedPromoIds,
+    handleSaveToggle: hookHandleSaveToggle,
+  } = usePromotionList({
+    initialData: initialPromos,
+    fetchData: async (page) => {
+      const supabase = createClient();
+      const { data: userData } = await supabase.auth.getUser();
+
+      if (!userData?.user?.email) {
+        return { data: [], hasMore: false };
+      }
+
+      const { data, error } = await supabase
+        .from("saved_promotions")
+        .select(
+          `
+          promo_id,
+          promo:promo_id (
+            id,
+            title,
+            raw_title,
+            deal_type,
+            normal_price,
+            sale_price,
+            start_date,
+            end_date,
+            image_url,
+            barcode,
+            source_url,
+            description,
+            category,
+            brand:brand_id (
+              name
+            )
+          )
+        `
+        )
+        .eq("user_email", userData.user.email)
+        .order("created_at", { ascending: false })
+        .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
+
+      if (error) throw error;
+
+      const newPromos =
+        data
+          ?.map((item: any) => {
+            if (!item.promo) return null;
+            return {
+              ...item.promo,
+              brand_name: item.promo.brand?.name,
+            };
+          })
+          .filter(Boolean) || [];
+
+      return {
+        data: newPromos,
+        hasMore: newPromos.length === ITEMS_PER_PAGE,
+      };
+    },
+  });
+
+  // 저장 해제 시 목록에서 제거하는 래퍼
+  const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
+
   const handleSaveToggle = useCallback(
     async (promoId: string) => {
-      if (!userEmail) {
-        alert("로그인이 필요합니다.");
-        return;
+      const result = await hookHandleSaveToggle(promoId);
+
+      // 저장 해제 시 removedIds에 추가
+      if (result.success && !result.saved) {
+        setRemovedIds((prev) => new Set(prev).add(promoId));
       }
 
-      try {
-        const result = await toggleSavePromo(userEmail, promoId);
-        if (result.success) {
-          setSavedPromoIds((prev) => {
-            const newSet = new Set(prev);
-            if (result.saved) {
-              newSet.add(promoId);
-            } else {
-              newSet.delete(promoId);
-            }
-            return newSet;
-          });
-        }
-      } catch (error) {
-        console.error("Error toggling save:", error);
-      }
+      return result;
     },
-    [userEmail]
+    [hookHandleSaveToggle]
   );
 
-  // 저장된 프로모션만 필터링
-  const displayedPromos = initialPromos.filter((promo) =>
-    savedPromoIds.has(promo.id)
+  // 저장된 프로모션만 필터링 + 제거된 항목 제외
+  const displayedPromos = promos.filter(
+    (promo) => savedPromoIds.has(promo.id) && !removedIds.has(promo.id)
   );
 
   return (
     <main className="px-3 pb-16 pt-3">
       {displayedPromos.length > 0 ? (
-        <div className="space-y-3">
-          {displayedPromos.map((promo) => (
-            <PromoCardEnhanced
-              key={promo.id}
-              promotion={promo}
-              isSaved={savedPromoIds.has(promo.id)}
-              onSaveToggle={handleSaveToggle}
-            />
-          ))}
-        </div>
+        <>
+          <div className="space-y-3">
+            {displayedPromos.map((promo) => (
+              <PromoCardEnhanced
+                key={promo.id}
+                promotion={promo}
+                isSaved={savedPromoIds.has(promo.id)}
+                onSaveToggle={handleSaveToggle}
+              />
+            ))}
+          </div>
+
+          {/* 무한스크롤 트리거 */}
+          <div ref={loadMoreRef} className="py-4">
+            {loadingMore && <Loading />}
+            {!hasMore && displayedPromos.length > 0 && (
+              <p className="text-center text-gray-500 text-sm">
+                모든 저장한 프로모션을 불러왔습니다
+              </p>
+            )}
+          </div>
+        </>
       ) : (
         <div className="text-center py-20">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

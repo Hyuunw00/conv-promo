@@ -1,73 +1,47 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Promotion } from "@/types/promotion";
 import PromoCardEnhanced from "@/components/PromoCardEnhanced";
 import { createClient } from "@/lib/supabase/client";
-import { getCurrentUser } from "@/lib/auth";
-import { toggleSavePromo } from "@/app/actions/saved-actions";
+import { usePromotionList } from "@/hooks/usePromotionList";
 
 export default function SearchPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
-  const [searchResults, setSearchResults] = useState<Promotion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [savedPromoIds, setSavedPromoIds] = useState<Set<string>>(new Set());
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 사용자 정보 및 저장된 프로모션 확인
-  useEffect(() => {
-    const checkUser = async () => {
-      const { user: currentUser } = await getCurrentUser();
-      setUser(currentUser);
+  const ITEMS_PER_PAGE = 20;
 
-      if (currentUser?.email) {
-        try {
-          const response = await fetch("/api/saved/ids");
-          const result = await response.json();
+  // 통합 훅 사용
+  const {
+    promos: searchResults,
+    loadingMore,
+    hasMore,
+    loadMoreRef,
+    savedPromoIds,
+    handleSaveToggle,
+    resetData,
+  } = usePromotionList({
+    initialData: [],
+    fetchData: async (page) => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("promo_with_brand")
+        .select("*")
+        .ilike("title", `%${searchQuery}%`)
+        .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
 
-          if (result.data && Array.isArray(result.data)) {
-            const savedSet = new Set(result.data);
-            setSavedPromoIds(savedSet as Set<string>);
-          }
-        } catch (error) {
-          console.error("Error fetching saved promo ids:", error);
-        }
-      }
-    };
-    checkUser();
-  }, []);
-
-  // 저장 토글 핸들러
-  const handleSaveToggle = useCallback(
-    async (promoId: string) => {
-      if (!user?.email) {
-        alert("로그인이 필요합니다.");
-        return;
-      }
-
-      try {
-        const result = await toggleSavePromo(user.email, promoId);
-        if (result.success) {
-          setSavedPromoIds((prev) => {
-            const newSet = new Set(prev);
-            if (result.saved) {
-              newSet.add(promoId);
-            } else {
-              newSet.delete(promoId);
-            }
-            return newSet;
-          });
-        }
-      } catch (error) {
-        console.error("Error toggling save:", error);
-      }
+      const results = (data as Promotion[]) || [];
+      return {
+        data: results,
+        hasMore: results.length === ITEMS_PER_PAGE,
+      };
     },
-    [user]
-  );
+  });
 
   // 페이지 닫기 (홈으로 이동)
   const handleClose = () => {
@@ -77,8 +51,7 @@ export default function SearchPage() {
   // 디바운싱된 자동완성 검색
   const handleInputChange = (value: string) => {
     setSearchQuery(value);
-    setSearchResults([]); // 입력 중에는 이전 검색 결과 초기화
-
+    resetData([]);
     // 이전 타이머 취소
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -114,9 +87,10 @@ export default function SearchPage() {
       .from("promo_with_brand")
       .select("*")
       .ilike("title", `%${query}%`)
-      .limit(50);
+      .range(0, ITEMS_PER_PAGE - 1);
 
-    setSearchResults(data as Promotion[] || []);
+    const results = (data as Promotion[]) || [];
+    resetData(results);
     setIsSearching(false);
   };
 
@@ -149,7 +123,7 @@ export default function SearchPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => handleInputChange(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSearch(searchQuery)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch(searchQuery)}
               placeholder="상품명, 브랜드 검색"
               className="w-full px-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
@@ -159,7 +133,7 @@ export default function SearchPage() {
                 onClick={() => {
                   setSearchQuery("");
                   setSearchSuggestions([]);
-                  setSearchResults([]);
+                  resetData([]);
                 }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full"
               >
@@ -228,19 +202,35 @@ export default function SearchPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
           </div>
         ) : searchResults.length > 0 ? (
-          <div className="space-y-3">
-            <p className="text-sm text-gray-500 mb-4">
-              검색 결과 {searchResults.length}개
-            </p>
-            {searchResults.map((promo) => (
-              <PromoCardEnhanced
-                key={promo.id}
-                promotion={promo}
-                isSaved={savedPromoIds.has(promo.id)}
-                onSaveToggle={handleSaveToggle}
-              />
-            ))}
-          </div>
+          <>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-500 mb-4">
+                검색 결과 {searchResults.length}개{hasMore ? "+" : ""}
+              </p>
+              {searchResults.map((promo) => (
+                <PromoCardEnhanced
+                  key={promo.id}
+                  promotion={promo}
+                  isSaved={savedPromoIds.has(promo.id)}
+                  onSaveToggle={handleSaveToggle}
+                />
+              ))}
+            </div>
+
+            {/* 무한스크롤 트리거 */}
+            <div ref={loadMoreRef} className="py-4">
+              {loadingMore && (
+                <div className="flex justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              )}
+              {!hasMore && searchResults.length > 0 && (
+                <p className="text-center text-gray-500 text-sm">
+                  모든 검색 결과를 불러왔습니다
+                </p>
+              )}
+            </div>
+          </>
         ) : searchQuery && !isSearching ? (
           <div className="text-center py-20">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -258,7 +248,9 @@ export default function SearchPage() {
                 />
               </svg>
             </div>
-            <p className="text-gray-500">&quot;{searchQuery}&quot; 검색 결과가 없습니다</p>
+            <p className="text-gray-500">
+              &quot;{searchQuery}&quot; 검색 결과가 없습니다
+            </p>
           </div>
         ) : (
           <div className="text-center py-20">
