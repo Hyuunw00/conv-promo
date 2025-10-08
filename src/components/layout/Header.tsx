@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DateRangeFilter from "./DateRangeFilter";
 import FilterBottomSheet from "./FilterBottomSheet";
 import { SlidersHorizontal } from "lucide-react";
+import Image from "next/image";
 
 interface HeaderProps {
   selectedBrand: string;
@@ -62,9 +63,15 @@ export default function Header({
       <div className="px-3 py-3">
         <div className="flex items-center justify-between">
           {/* 로고 */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">편털</span>
+          <div className="flex items-center gap-2 ">
+            <div className="w-8 h-8 relative">
+              <Image
+                src="/conv-promo-logo.png"
+                alt="편털 로고"
+                width={32}
+                height={32}
+                className="object-contain"
+              />
             </div>
             <h1 className="text-base font-bold text-gray-900">편의점 털기</h1>
           </div>

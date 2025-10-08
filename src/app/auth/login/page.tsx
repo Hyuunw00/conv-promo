@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { signInWithGoogle, signInWithKakao } from "@/lib/auth";
 import { useAuth } from "@/hooks/useAuth";
-import Loading from "@/components/ui/Loading";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -44,8 +44,15 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">편털</span>
+          <div className="w-32 h-32 mx-auto mb-4 relative">
+            <Image
+              src="/conv-promo-logo.png"
+              alt="편털 로고"
+              width={128}
+              height={128}
+              className="object-contain"
+              priority
+            />
           </div>
           <h2 className="text-3xl font-bold text-gray-900">환영합니다!</h2>
           <p className="mt-2 text-sm text-gray-600">
