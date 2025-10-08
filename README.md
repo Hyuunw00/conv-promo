@@ -1,31 +1,27 @@
-# 편의점 프로모션 모아보기
+# 편털 - 편의점 프로모션 모아보기
 
-편의점(GS25, CU, 세븐일레븐, 이마트24) 행사 정보를 한 곳에서 확인할 수 있는 웹 애플리케이션입니다.
+GS25, CU, 세븐일레븐, 이마트24의 1+1, 2+1 행사를 한눈에 확인하세요.
 
-## 기술 스택
+## ✨ 주요 기능
 
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS 4
-- **Database**: PostgreSQL (Supabase)
-- **Authentication**: Supabase Auth (Google, Kakao OAuth)
-- **ORM**: Prisma (설정되어 있으나 현재 미사용)
+- 🏪 **4개 편의점 통합** - GS25, CU, 세븐일레븐, 이마트24
+- 🔍 **스마트 검색** - 제품명, 브랜드로 빠른 검색
+- 🏷️ **필터링** - 브랜드별, 행사 유형별 (1+1, 2+1, 할인)
+- 💾 **저장 기능** - 관심 프로모션 북마크
+- 🔐 **소셜 로그인** - Google, Kakao 간편 로그인
+- 📱 **PWA 지원** - 모바일 홈 화면에 설치 가능, 오프라인 지원
+- 🤖 **자동 업데이트** - 매주 월요일 새벽 자동 데이터 갱신
 
-## 주요 기능
+## 🛠 기술 스택
 
-- 편의점 브랜드별 프로모션 조회
-- 행사 유형별 필터링 (1+1, 2+1, 할인)
-- 프로모션 검색
-- 프로모션 저장/북마크
-- 소셜 로그인 (Google, Kakao)
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS 4
+- **PWA**: Serwist (Service Worker)
+- **Backend**: Supabase (PostgreSQL, Auth)
+- **Automation**: GitHub Actions (주간 크롤링)
 
-## 시작하기
+## 🚀 시작하기
 
-### 필수 요구사항
-
-- Node.js 20 이상
-- pnpm
-
-### 설치
+### 설치 및 실행
 
 ```bash
 # 의존성 설치
@@ -34,85 +30,74 @@ pnpm install
 # 환경변수 설정
 cp .env.example .env
 # .env 파일에 Supabase 설정 추가
-```
 
-### 환경변수
-
-`.env` 파일에 다음 환경변수가 필요합니다:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-DATABASE_URL=your_postgresql_connection_string
-```
-
-### 개발 서버 실행
-
-```bash
-pnpm dev
-```
-
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인합니다.
-
-### 프로덕션 빌드
-
-```bash
-pnpm build
-pnpm start
-```
-
-## 프로젝트 구조
-
-```
-src/
-├── app/                    # Next.js App Router
-│   ├── @modal/            # 병렬 라우트 (모달)
-│   ├── login/             # 로그인 페이지
-│   ├── saved/             # 저장한 프로모션 페이지
-│   └── page.tsx           # 메인 페이지
-├── components/            # React 컴포넌트
-├── lib/                   # 유틸리티 및 설정
-│   ├── supabase/          # Supabase 클라이언트
-│   └── auth.ts            # 인증 유틸리티
-├── services/              # 비즈니스 로직
-│   ├── promotion/         # 프로모션 서비스
-│   └── saved/             # 저장 기능 서비스
-└── types/                 # TypeScript 타입 정의
-```
-
-## 데이터베이스 스키마
-
-### 테이블
-
-- `brand`: 편의점 브랜드 정보
-- `promo`: 프로모션 정보
-- `saved_promotions`: 사용자가 저장한 프로모션
-
-### 뷰
-
-- `promo_with_brand`: 프로모션과 브랜드 정보를 조인한 뷰
-
-## 스크립트
-
-```bash
-# 개발 서버
+# 개발 서버 실행
 pnpm dev
 
 # 프로덕션 빌드
 pnpm build
-
-# 프로덕션 서버 시작
 pnpm start
-
-# 린트
-pnpm lint
-
-# Prisma 명령어
-pnpm prisma generate    # Prisma 클라이언트 생성
-pnpm prisma db push     # 스키마 변경사항 푸시
-pnpm prisma studio      # Prisma Studio GUI 열기
 ```
 
-## 라이센스
+### 환경변수
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+## 📁 프로젝트 구조
+
+```
+conv-promo/
+├── .github/workflows/     # GitHub Actions (자동 크롤링)
+├── crawler/              # Python 크롤러
+├── public/              # PWA 아이콘, manifest
+├── src/
+│   ├── app/            # Next.js App Router
+│   ├── components/     # React 컴포넌트
+│   ├── services/       # 비즈니스 로직
+│   └── sw.ts           # Service Worker
+└── next.config.ts      # Serwist PWA 설정
+```
+
+## 🤖 자동 크롤링
+
+GitHub Actions를 통해 **매주 월요일 새벽 2시(KST)**에 자동 실행됩니다.
+
+- **수동 실행**: GitHub Actions 탭에서 "Run workflow" 클릭
+- **크롤러**: Python + Selenium 기반
+- **로그 보관**: 7일간 보관
+
+## 📱 PWA 설치
+
+### iOS Safari
+공유 버튼 → "홈 화면에 추가"
+
+### Android Chrome
+메뉴 → "앱 설치" 또는 "홈 화면에 추가"
+
+## 🔑 OAuth 설정
+
+배포 시 각 OAuth 제공자에 Redirect URI 등록이 필요합니다.
+
+### Google OAuth
+[Google Cloud Console](https://console.cloud.google.com/)에서 설정
+- Redirect URI: `https://yourdomain.com/auth/callback`
+
+### Kakao OAuth
+[Kakao Developers](https://developers.kakao.com/)에서 설정
+- Redirect URI: `https://yourdomain.com/auth/callback`
+
+## 🚢 배포
+
+### 권장 플랫폼
+- Vercel (권장)
+- Netlify
+- Cloudflare Pages
+
+환경변수를 배포 플랫폼에서 설정해야 합니다.
+
+## 📄 라이센스
 
 MIT
