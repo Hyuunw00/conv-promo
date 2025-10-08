@@ -5,6 +5,7 @@ import { SavedPromotionService } from "@/services/saved/saved.service";
 import { Heart, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import SavedPageClient from "./SavedPageClient";
+import ScrollToTop from "@/components/ScrollToTop";
 
 export default async function SavedPage() {
   const supabase = await createClient();
@@ -57,6 +58,7 @@ export default async function SavedPage() {
         totalCount={allSavedPromos?.length || 0}
         userEmail={user.email!}
       />
+      <ScrollToTop />
     </>
   );
 }

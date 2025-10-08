@@ -4,6 +4,7 @@ import Header from "@/components/layout/Header";
 import PromotionList from "@/components/PromotionList";
 import { Promotion } from "@/types/promotion";
 import React, { useState } from "react";
+import ScrollToTop from "@/components/ScrollToTop";
 
 interface ClientProps {
   initialData: Promotion[];
@@ -52,6 +53,7 @@ export default function Client({
           }}
         />
       </main>
+      <ScrollToTop />
     </>
   );
 }

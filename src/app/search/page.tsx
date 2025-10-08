@@ -6,6 +6,7 @@ import { Promotion } from "@/types/promotion";
 import PromoCardEnhanced from "@/components/PromoCardEnhanced";
 import { createClient } from "@/lib/supabase/client";
 import { usePromotionList } from "@/hooks/usePromotionList";
+import ScrollToTop from "@/components/ScrollToTop";
 
 export default function SearchPage() {
   const router = useRouter();
@@ -260,6 +261,7 @@ export default function SearchPage() {
           </div>
         )}
       </div>
+      <ScrollToTop />
     </div>
   );
 }
