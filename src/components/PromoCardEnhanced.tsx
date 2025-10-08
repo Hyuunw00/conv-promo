@@ -67,17 +67,17 @@ export default function PromoCardEnhanced({
     <article className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden">
       {/* 이미지 섹션 */}
       {promotion.image_url && (
-        <div className="relative bg-gray-100">
+        <div className="relative bg-gray-50 h-56 flex items-center justify-center overflow-hidden">
           <img
             src={promotion.image_url}
             alt={promotion.title}
-            className="w-full h-auto object-contain"
+            className="max-w-full max-h-full w-auto h-auto object-contain"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
           />
           {discountRate && (
-            <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-md font-bold text-sm">
+            <div className="absolute top-3 left-3 bg-red-500 text-white px-2.5 py-1.5 rounded-lg font-bold text-sm shadow-md">
               {discountRate}% OFF
             </div>
           )}

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import DateRangeFilter from "./DateRangeFilter";
 import DealTypeFilter from "./DealTypeFilter";
+import CategoryFilter from "./CategoryFilter";
 import { brands, brandInfo } from "@/constants/brands";
 import Image from "next/image";
 
@@ -11,6 +12,8 @@ interface HeaderProps {
   onBrandChange: (brand: string) => void;
   selectedDeal: string;
   onDealChange: (deal: string) => void;
+  selectedCategory: string;
+  onCategoryChange: (category: string) => void;
   onDateRangeChange: (start: string, end: string) => void;
   initialStartDate: string;
   initialEndDate: string;
@@ -21,6 +24,8 @@ export default function Header({
   onBrandChange,
   selectedDeal,
   onDealChange,
+  selectedCategory,
+  onCategoryChange,
   onDateRangeChange,
   initialStartDate,
   initialEndDate,
@@ -99,6 +104,12 @@ export default function Header({
 
       {/* 행사 유형 필터 */}
       <DealTypeFilter selectedDeal={selectedDeal} onDealChange={onDealChange} />
+
+      {/* 카테고리 필터 */}
+      <CategoryFilter
+        selectedCategory={selectedCategory}
+        onCategoryChange={onCategoryChange}
+      />
     </header>
   );
 }

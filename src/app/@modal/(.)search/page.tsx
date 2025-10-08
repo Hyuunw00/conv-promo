@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { PromotionService } from "@/services/promotion/promotion.service";
+import { createClient } from "@/lib/supabase/client";
 import { Promotion } from "@/types/promotion";
 import PromoCard from "@/components/PromoCard";
 
@@ -30,8 +30,19 @@ export default function SearchModal() {
     }
 
     debounceTimerRef.current = setTimeout(async () => {
-      const { data } = await PromotionService.fetchSearchSuggestions(value, 5);
-      setSearchSuggestions(data || []);
+      if (!value.trim()) {
+        setSearchSuggestions([]);
+        return;
+      }
+
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("promo_with_brand")
+        .select("title")
+        .ilike("title", `%${value}%`)
+        .limit(5);
+
+      setSearchSuggestions(data?.map((item) => item.title) || []);
     }, 1000);
   };
 
@@ -43,9 +54,14 @@ export default function SearchModal() {
     setSearchSuggestions([]); // 검색 시 제안 목록 초기화
     setSearchQuery(query);
 
-    const { data } = await PromotionService.fetchSearchPromotions(query, 50);
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("promo_with_brand")
+      .select("*")
+      .ilike("title", `%${query}%`)
+      .limit(50);
 
-    setSearchResults(data || []);
+    setSearchResults((data as Promotion[]) || []);
     setIsSearching(false);
   };
 

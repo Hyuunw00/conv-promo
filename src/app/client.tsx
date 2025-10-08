@@ -18,6 +18,7 @@ export default function Client({
 }: ClientProps) {
   const [selectedBrand, setSelectedBrand] = useState<string>("ALL");
   const [selectedDeal, setSelectedDeal] = useState<string>("ALL");
+  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
 
   const [selectedDateRange, setSelectedDateRange] = useState({
     start: defaultStartDate,
@@ -29,8 +30,10 @@ export default function Client({
       <Header
         selectedDeal={selectedDeal}
         selectedBrand={selectedBrand}
+        selectedCategory={selectedCategory}
         onBrandChange={setSelectedBrand}
         onDealChange={setSelectedDeal}
+        onCategoryChange={setSelectedCategory}
         onDateRangeChange={(start, end) => setSelectedDateRange({ start, end })}
         initialStartDate={defaultStartDate}
         initialEndDate={defaultEndDate}
@@ -43,6 +46,7 @@ export default function Client({
           filters={{
             brandName: selectedBrand,
             dealType: selectedDeal,
+            category: selectedCategory,
             startDate: selectedDateRange.start,
             endDate: selectedDateRange.end,
           }}

@@ -5,6 +5,7 @@ interface UseInfinitePromotionsOptions {
   initialData?: Promotion[];
   brandName?: string;
   dealType?: string;
+  category?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -13,6 +14,7 @@ export function useInfinitePromotions({
   initialData,
   brandName,
   dealType,
+  category,
   startDate,
   endDate,
 }: UseInfinitePromotionsOptions) {
@@ -34,6 +36,7 @@ export function useInfinitePromotions({
       const params = new URLSearchParams();
       if (brandName) params.append('brandName', brandName);
       if (dealType) params.append('dealType', dealType);
+      if (category) params.append('category', category);
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
       params.append('limit', String(ITEMS_PER_PAGE));
@@ -55,7 +58,7 @@ export function useInfinitePromotions({
 
     setPage(1);
     setLoading(false);
-  }, [brandName, dealType, startDate, endDate]);
+  }, [brandName, dealType, category, startDate, endDate]);
 
   // 더 많은 데이터 로드 (스크롤시)
   const fetchMore = useCallback(async () => {
@@ -67,6 +70,7 @@ export function useInfinitePromotions({
       const params = new URLSearchParams();
       if (brandName) params.append('brandName', brandName);
       if (dealType) params.append('dealType', dealType);
+      if (category) params.append('category', category);
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
       params.append('limit', String(ITEMS_PER_PAGE));
@@ -95,14 +99,14 @@ export function useInfinitePromotions({
     }
 
     setLoadingMore(false);
-  }, [page, hasMore, loadingMore, brandName, dealType, startDate, endDate]);
+  }, [page, hasMore, loadingMore, brandName, dealType, category, startDate, endDate]);
 
   // 필터 변경시 데이터 리셋
   useEffect(() => {
     setPage(0);
     setHasMore(true);
     fetchInitialData();
-  }, [brandName, dealType, startDate, endDate]);
+  }, [brandName, dealType, category, startDate, endDate]);
 
   return {
     promos,

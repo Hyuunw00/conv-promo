@@ -239,3 +239,20 @@ export const UNIFIED_CATEGORIES: UnifiedCategory[] = [
   "생활용품",
   "기타",
 ];
+
+/**
+ * 통일된 카테고리에서 원본 카테고리 목록으로 역매핑
+ */
+export function getOriginalCategories(
+  unifiedCategory: UnifiedCategory
+): string[] {
+  const result: string[] = [];
+
+  for (const [original, unified] of Object.entries(CATEGORY_MAPPING)) {
+    if (unified === unifiedCategory) {
+      result.push(original);
+    }
+  }
+
+  return result;
+}

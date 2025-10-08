@@ -1,11 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import { Promotion } from "@/types/promotion";
+import {
+  getOriginalCategories,
+  UnifiedCategory,
+} from "@/utils/categoryMapper";
 
 export interface FetchPromotionsOptions {
   limit?: number;
   offset?: number;
   brandName?: string;
   dealType?: string;
+  category?: string;
   startDate?: string;
   endDate?: string;
   orderBy?: "start_date" | "end_date" | "created_at";
@@ -33,6 +38,7 @@ export class PromotionService {
         offset = 0,
         brandName,
         dealType,
+        category,
         startDate,
         endDate,
         orderBy = "end_date",
@@ -55,6 +61,16 @@ export class PromotionService {
       // 딜 타입 필터
       if (dealType && dealType !== "ALL") {
         query = query.eq("deal_type", dealType);
+      }
+
+      // 카테고리 필터 (통일 카테고리 → 원본 카테고리 목록)
+      if (category && category !== "ALL") {
+        const originalCategories = getOriginalCategories(
+          category as UnifiedCategory
+        );
+        if (originalCategories.length > 0) {
+          query = query.in("category", originalCategories);
+        }
       }
 
       // 날짜 범위 필터 (프로모션이 선택한 기간과 겹치는 경우)

@@ -13,6 +13,7 @@ interface PromotionListProps {
   filters: {
     brandName: string;
     dealType: string;
+    category: string;
     startDate: string;
     endDate: string;
   };
