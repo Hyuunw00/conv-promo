@@ -80,7 +80,13 @@ export function useInfinitePromotions({
       }
 
       if (result.data) {
-        setPromos((prev) => [...prev, ...result.data]);
+        setPromos((prev) => {
+          // 기존 ID Set 생성
+          const existingIds = new Set(prev.map(p => p.id));
+          // 중복되지 않은 새 데이터만 필터링
+          const newData = result.data.filter((p: Promotion) => !existingIds.has(p.id));
+          return [...prev, ...newData];
+        });
         setHasMore(result.hasMore || false);
         setPage((prev) => prev + 1);
       }
