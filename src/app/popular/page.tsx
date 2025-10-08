@@ -1,5 +1,5 @@
 import { PromotionService } from "@/services/promotion/promotion.service";
-import PromoCard from "@/components/PromoCard";
+import PromoCardEnhanced from "@/components/PromoCardEnhanced";
 import PopularClient from "./PopularClient";
 
 interface PopularPageProps {
@@ -81,7 +81,7 @@ export default async function PopularPage({ searchParams }: PopularPageProps) {
                     </div>
                   </div>
                 )}
-                <PromoCard promotion={promo} />
+                <PromoCardEnhanced promotion={promo} />
               </div>
             ))}
           </div>

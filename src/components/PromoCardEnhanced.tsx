@@ -146,13 +146,6 @@ export default function PromoCardEnhanced({
               {fmtDate(promotion.start_date)} ~ {fmtDate(promotion.end_date)}
             </span>
           </div>
-
-          {/* 상품 설명 (중량 등) */}
-          {promotion.description && (
-            <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1.5 rounded">
-              {promotion.description}
-            </div>
-          )}
         </div>
 
         {/* 확장/축소 버튼 */}
@@ -171,6 +164,12 @@ export default function PromoCardEnhanced({
         {/* 드롭다운 추가 정보 */}
         {isExpanded && (
           <div className="mt-3 pt-3 border-t border-gray-100 space-y-2 transition-all duration-200">
+            {promotion.description && (
+              <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded">
+                {promotion.description}
+              </div>
+            )}
+
             {promotion.raw_title && promotion.raw_title !== promotion.title && (
               <div className="text-xs text-gray-500">
                 <span className="font-medium">원본 제목:</span>{" "}

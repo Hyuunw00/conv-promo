@@ -48,7 +48,7 @@ export class PromotionService {
       let query = supabase
         .from("promo_with_brand")
         .select(
-          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url",
+          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url, description",
           { count: "exact" }
         )
         .order(orderBy, { ascending });
@@ -118,7 +118,7 @@ export class PromotionService {
       const { data, error } = await supabase
         .from("promo_with_brand")
         .select(
-          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url"
+          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url, description"
         )
         .eq("id", id)
         .single();
@@ -158,7 +158,7 @@ export class PromotionService {
       const { data, error } = await supabase
         .from("promo_with_brand")
         .select(
-          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url"
+          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url, description"
         )
         .or(
           `title.ilike.%${query}%,category.ilike.%${query}%,brand_name.ilike.%${query}%`
@@ -245,7 +245,7 @@ export class PromotionService {
       let query = supabase
         .from("promo_with_brand")
         .select(
-          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url"
+          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url, description"
         )
         .gte("end_date", today.toISOString().split("T")[0]) // 종료일이 오늘 이후
         .lte("start_date", today.toISOString().split("T")[0]); // 시작일이 오늘 이전

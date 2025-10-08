@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Promotion } from "@/types/promotion";
-import PromoCard from "@/components/PromoCard";
+import PromoCardEnhanced from "@/components/PromoCardEnhanced";
+import { getCurrentUser } from "@/lib/auth";
+import { toggleSavePromo } from "@/app/actions/saved-actions";
 
 export default function SearchModal() {
   const router = useRouter();
@@ -12,7 +14,60 @@ export default function SearchModal() {
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
   const [searchResults, setSearchResults] = useState<Promotion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [savedPromoIds, setSavedPromoIds] = useState<Set<string>>(new Set());
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 사용자 정보 및 저장된 프로모션 확인
+  useEffect(() => {
+    const checkUser = async () => {
+      const { user: currentUser } = await getCurrentUser();
+      setUser(currentUser);
+
+      if (currentUser?.email) {
+        try {
+          const response = await fetch("/api/saved/ids");
+          const result = await response.json();
+
+          if (result.data && Array.isArray(result.data)) {
+            const savedSet = new Set(result.data);
+            setSavedPromoIds(savedSet as Set<string>);
+          }
+        } catch (error) {
+          console.error("Error fetching saved promo ids:", error);
+        }
+      }
+    };
+    checkUser();
+  }, []);
+
+  // 저장 토글 핸들러
+  const handleSaveToggle = useCallback(
+    async (promoId: string) => {
+      if (!user?.email) {
+        alert("로그인이 필요합니다.");
+        return;
+      }
+
+      try {
+        const result = await toggleSavePromo(user.email, promoId);
+        if (result.success) {
+          setSavedPromoIds((prev) => {
+            const newSet = new Set(prev);
+            if (result.saved) {
+              newSet.add(promoId);
+            } else {
+              newSet.delete(promoId);
+            }
+            return newSet;
+          });
+        }
+      } catch (error) {
+        console.error("Error toggling save:", error);
+      }
+    },
+    [user]
+  );
 
   // 모달 닫기
   const handleClose = () => {
@@ -227,7 +282,12 @@ export default function SearchModal() {
                   </p>
                   <div className="space-y-3">
                     {searchResults.map((promo) => (
-                      <PromoCard key={promo.id} promotion={promo} />
+                      <PromoCardEnhanced
+                        key={promo.id}
+                        promotion={promo}
+                        isSaved={savedPromoIds.has(promo.id)}
+                        onSaveToggle={handleSaveToggle}
+                      />
                     ))}
                   </div>
                 </>
