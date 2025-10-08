@@ -70,13 +70,13 @@ export default function FilterBottomSheet({
     <>
       {/* 배경 오버레이 */}
       <div
-        className="fixed inset-0 bg-black/40 z-[100] animate-fade-in"
+        className="fixed  inset-0 bg-black/40 animate-fade-in"
         onClick={onClose}
       />
 
       {/* 바텀시트 */}
       <div
-        className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-[9999] animate-slide-up flex flex-col max-w-md mx-auto"
+        className="fixed z-[60] bottom-0 left-0 right-0 bg-white rounded-t-2xl  animate-slide-up flex flex-col max-w-md mx-auto"
         style={{ maxHeight: "calc(100vh - 80px)" }}
       >
         {/* 헤더 */}

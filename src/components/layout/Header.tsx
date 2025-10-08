@@ -16,6 +16,7 @@ interface HeaderProps {
   onDateRangeChange: (start: string, end: string) => void;
   initialStartDate: string;
   initialEndDate: string;
+  onFiltersChange?: (brand: string, category: string, deal: string) => void;
 }
 
 export default function Header({
@@ -28,6 +29,7 @@ export default function Header({
   onDateRangeChange,
   initialStartDate,
   initialEndDate,
+  onFiltersChange,
 }: HeaderProps) {
   const router = useRouter();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -37,9 +39,15 @@ export default function Header({
     category: string;
     deal: string;
   }) => {
-    onBrandChange(filters.brand);
-    onCategoryChange(filters.category);
-    onDealChange(filters.deal);
+    // 한 번에 모든 필터 업데이트
+    if (onFiltersChange) {
+      onFiltersChange(filters.brand, filters.category, filters.deal);
+    } else {
+      // 폴백: 개별 호출 (하위 호환성)
+      onBrandChange(filters.brand);
+      onCategoryChange(filters.category);
+      onDealChange(filters.deal);
+    }
   };
 
   // 활성 필터 개수 계산

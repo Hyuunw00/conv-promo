@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Calendar from "@/components/ui/Calendar";
 
 interface DateRangeFilterProps {
@@ -8,19 +8,52 @@ interface DateRangeFilterProps {
   onDateRangeChange: (startDate: string, endDate: string) => void;
 }
 
+const DATE_RANGE_STORAGE_KEY = "promo-date-range";
+
 export default function DateRangeFilter({
   initialStartDate,
   initialEndDate,
   onDateRangeChange,
 }: DateRangeFilterProps) {
-  const [startDate, setStartDate] = useState(initialStartDate);
-  const [endDate, setEndDate] = useState(initialEndDate);
+  // 로컬 스토리지에서 날짜 범위 가져오기
+  const getStoredDateRange = () => {
+    if (typeof window === "undefined") return null;
+    try {
+      const stored = localStorage.getItem(DATE_RANGE_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const storedRange = getStoredDateRange();
+  const [startDate, setStartDate] = useState(
+    storedRange?.start || initialStartDate
+  );
+  const [endDate, setEndDate] = useState(storedRange?.end || initialEndDate);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // 초기 로드 시 저장된 날짜 범위 적용
+  useEffect(() => {
+    if (storedRange) {
+      onDateRangeChange(storedRange.start, storedRange.end);
+    }
+  }, []);
 
   const handleDateApply = (newStartDate: string, newEndDate: string) => {
     setStartDate(newStartDate);
     setEndDate(newEndDate);
     onDateRangeChange(newStartDate, newEndDate);
+
+    // 로컬 스토리지에 저장
+    try {
+      localStorage.setItem(
+        DATE_RANGE_STORAGE_KEY,
+        JSON.stringify({ start: newStartDate, end: newEndDate })
+      );
+    } catch (error) {
+      console.error("Failed to save date range to localStorage:", error);
+    }
   };
 
   const formatDateDisplay = (dateStr: string) => {
