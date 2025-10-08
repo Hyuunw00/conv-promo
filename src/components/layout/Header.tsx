@@ -1,11 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DateRangeFilter from "./DateRangeFilter";
-import DealTypeFilter from "./DealTypeFilter";
-import CategoryFilter from "./CategoryFilter";
-import { brands, brandInfo } from "@/constants/brands";
-import Image from "next/image";
+import FilterBottomSheet from "./FilterBottomSheet";
+import { SlidersHorizontal } from "lucide-react";
 
 interface HeaderProps {
   selectedBrand: string;
@@ -31,67 +30,72 @@ export default function Header({
   initialEndDate,
 }: HeaderProps) {
   const router = useRouter();
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const handleFilterApply = (filters: {
+    brand: string;
+    category: string;
+    deal: string;
+  }) => {
+    onBrandChange(filters.brand);
+    onCategoryChange(filters.category);
+    onDealChange(filters.deal);
+  };
+
+  // 활성 필터 개수 계산
+  const activeFilterCount = [
+    selectedBrand !== "ALL",
+    selectedCategory !== "ALL",
+    selectedDeal !== "ALL",
+  ].filter(Boolean).length;
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
-      <div className="px-3 py-2.5">
+      <div className="px-3 py-3">
         <div className="flex items-center justify-between">
+          {/* 로고 */}
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xs">편털</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">편털</span>
             </div>
+            <h1 className="text-base font-bold text-gray-900">편의점 털기</h1>
           </div>
-          <button
-            onClick={() => router.push("/search", { scroll: false })}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <svg
-              className="w-5 h-5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
 
-      {/* 브랜드 필터 탭 */}
-      <div className="px-3 pb-2">
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-          {brands.map((brand) => {
-            const info = brandInfo[brand as keyof typeof brandInfo];
-            return (
-              <button
-                key={brand}
-                onClick={() => onBrandChange(brand)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                  selectedBrand === brand
-                    ? "bg-gray-900 text-white"
-                    : `${info.bgColor} ${info.textColor}`
-                }`}
+          {/* 우측 버튼들 */}
+          <div className="flex items-center gap-2">
+            {/* 필터 버튼 */}
+            <button
+              onClick={() => setIsFilterOpen(true)}
+              className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <SlidersHorizontal className="w-5 h-5 text-gray-600" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            {/* 검색 버튼 */}
+            <button
+              onClick={() => router.push("/search", { scroll: false })}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {info.logo && (
-                  <div className="w-4 h-4 relative flex-shrink-0">
-                    <Image
-                      src={info.logo}
-                      alt={info.name}
-                      width={16}
-                      height={16}
-                      className="object-contain"
-                    />
-                  </div>
-                )}
-                <span>{info.name}</span>
-              </button>
-            );
-          })}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -102,13 +106,14 @@ export default function Header({
         onDateRangeChange={onDateRangeChange}
       />
 
-      {/* 행사 유형 필터 */}
-      <DealTypeFilter selectedDeal={selectedDeal} onDealChange={onDealChange} />
-
-      {/* 카테고리 필터 */}
-      <CategoryFilter
+      {/* 필터 바텀시트 */}
+      <FilterBottomSheet
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        selectedBrand={selectedBrand}
         selectedCategory={selectedCategory}
-        onCategoryChange={onCategoryChange}
+        selectedDeal={selectedDeal}
+        onApply={handleFilterApply}
       />
     </header>
   );
