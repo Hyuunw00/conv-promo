@@ -1,5 +1,6 @@
 import "@/styles/global.css";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import Script from "next/script";
 
 export default function RootLayout({
   children,
@@ -32,6 +33,19 @@ export default function RootLayout({
           {modal}
           <BottomNavigation />
         </div>
+        {process.env.NODE_ENV === "development" && (
+          <Script id="unregister-sw" strategy="afterInteractive">
+            {`
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for(let registration of registrations) {
+                    registration.unregister();
+                  }
+                });
+              }
+            `}
+          </Script>
+        )}
       </body>
     </html>
   );
