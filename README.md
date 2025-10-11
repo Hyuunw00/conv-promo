@@ -1,23 +1,44 @@
 # 편털 - 편의점 프로모션 모아보기
 
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel)](https://conv-promo.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![PWA](https://img.shields.io/badge/PWA-Enabled-purple?logo=pwa)](https://web.dev/progressive-web-apps/)
+
 GS25, CU, 세븐일레븐, 이마트24의 1+1, 2+1 행사를 한눈에 확인하세요.
+
+🔗 **라이브 데모**: [https://conv-promo.vercel.app](https://conv-promo.vercel.app)
 
 ## ✨ 주요 기능
 
 - 🏪 **4개 편의점 통합** - GS25, CU, 세븐일레븐, 이마트24
-- 🔍 **스마트 검색** - 제품명, 브랜드로 빠른 검색
-- 🏷️ **필터링** - 브랜드별, 행사 유형별 (1+1, 2+1, 할인)
-- 💾 **저장 기능** - 관심 프로모션 북마크
+- 🔍 **스마트 검색** - 제품명, 브랜드로 빠른 검색 + 자동완성
+- 🏷️ **다중 필터링** - 브랜드별, 카테고리별, 행사 유형별 (1+1, 2+1, 할인), 날짜 범위
+- 💾 **저장 기능** - 관심 프로모션 북마크 (로그인 필요)
 - 🔐 **소셜 로그인** - Google, Kakao 간편 로그인
-- 📱 **PWA 지원** - 모바일 홈 화면에 설치 가능, 오프라인 지원
-- 🤖 **자동 업데이트** - 매주 월요일 새벽 자동 데이터 갱신
+- 📱 **PWA 지원** - 모바일 홈 화면에 설치 가능, 오프라인 지원, 설치 안내 UI
+- ♾️ **무한 스크롤** - 부드러운 페이지네이션
+- 🤖 **자동 업데이트** - 매주 월요일 새벽 2시(KST) 자동 데이터 갱신
 
 ## 🛠 기술 스택
 
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS 4
-- **PWA**: Serwist (Service Worker)
-- **Backend**: Supabase (PostgreSQL, Auth)
-- **Automation**: GitHub Actions (주간 크롤링)
+### Frontend
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript 5
+- **UI**: React 19, Tailwind CSS 4
+- **Icons**: Lucide React
+- **PWA**: Serwist 9.2.1 (Service Worker, Offline Support)
+
+### Backend & Database
+- **Database**: PostgreSQL (Supabase)
+- **ORM**: Prisma (schema reference)
+- **Authentication**: Supabase Auth (Google, Kakao OAuth)
+- **API**: Next.js API Routes + Supabase REST API
+
+### DevOps & Automation
+- **Hosting**: Vercel (Auto CI/CD)
+- **Crawler**: Python + Selenium (GitHub Actions)
+- **Scheduling**: GitHub Actions Cron (Weekly)
 
 ## 🚀 시작하기
 
@@ -50,15 +71,42 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ```
 conv-promo/
-├── .github/workflows/     # GitHub Actions (자동 크롤링)
-├── crawler/              # Python 크롤러
-├── public/              # PWA 아이콘, manifest
+├── .github/workflows/           # GitHub Actions
+│   └── crawler.yml             # 주간 크롤링 자동화
+├── crawler/                    # Python 크롤러
+│   ├── crawlers/              # 편의점별 크롤러
+│   ├── config.py              # 크롤러 설정
+│   └── upload_to_db.py        # Supabase 업로드
+├── prisma/
+│   └── schema.prisma          # DB 스키마 (참고용)
+├── public/
+│   ├── manifest.json          # PWA 매니페스트
+│   ├── icon-192.png           # PWA 아이콘
+│   └── sw.js                  # Service Worker (빌드 시 생성)
 ├── src/
-│   ├── app/            # Next.js App Router
-│   ├── components/     # React 컴포넌트
-│   ├── services/       # 비즈니스 로직
-│   └── sw.ts           # Service Worker
-└── next.config.ts      # Serwist PWA 설정
+│   ├── app/                   # Next.js App Router
+│   │   ├── @modal/           # 병렬 라우트 (검색 모달)
+│   │   ├── api/              # API Routes
+│   │   ├── auth/             # 인증 페이지
+│   │   ├── popular/          # 인기 프로모션
+│   │   ├── saved/            # 저장된 프로모션
+│   │   └── page.tsx          # 홈페이지
+│   ├── components/            # React 컴포넌트
+│   │   ├── layout/           # 레이아웃 컴포넌트
+│   │   ├── InstallBanner.tsx # PWA 설치 안내
+│   │   └── ...
+│   ├── hooks/                 # Custom Hooks
+│   ├── lib/                   # 라이브러리
+│   │   └── supabase/         # Supabase 클라이언트
+│   ├── services/              # 비즈니스 로직
+│   │   ├── promotion/        # 프로모션 서비스
+│   │   └── saved/            # 저장 기능 서비스
+│   ├── types/                 # TypeScript 타입
+│   ├── utils/                 # 유틸리티 함수
+│   ├── middleware.ts          # 인증 미들웨어
+│   └── sw.ts                  # Service Worker 소스
+├── next.config.ts             # Next.js + Serwist 설정
+└── package.json
 ```
 
 ## 🤖 자동 크롤링
@@ -77,26 +125,43 @@ GitHub Actions를 통해 **매주 월요일 새벽 2시(KST)**에 자동 실행�
 ### Android Chrome
 메뉴 → "앱 설치" 또는 "홈 화면에 추가"
 
-## 🔑 OAuth 설정
-
-배포 시 각 OAuth 제공자에 Redirect URI 등록이 필요합니다.
-
-### Google OAuth
-[Google Cloud Console](https://console.cloud.google.com/)에서 설정
-- Redirect URI: `https://yourdomain.com/auth/callback`
-
-### Kakao OAuth
-[Kakao Developers](https://developers.kakao.com/)에서 설정
-- Redirect URI: `https://yourdomain.com/auth/callback`
-
 ## 🚢 배포
 
-### 권장 플랫폼
-- Vercel (권장)
-- Netlify
-- Cloudflare Pages
+### Vercel 배포 (현재 운영 중)
 
-환경변수를 배포 플랫폼에서 설정해야 합니다.
+1. GitHub 레포지토리를 Vercel에 연동
+2. 환경변수 설정:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+3. Deploy 버튼 클릭
+4. 자동 CI/CD 설정 완료 (main 브랜치 push 시 자동 배포)
+
+### 다른 플랫폼
+- **Cloudflare Pages**: Edge 환경에서 동작 (Webpack 필수)
+- **Netlify**: 기본 설정으로 배포 가능
+
+## 🎯 주요 페이지
+
+- `/` - 홈 (전체 프로모션 리스트)
+- `/popular` - 인기 프로모션 (2+1, 1+1 우선)
+- `/search` - 검색 (자동완성 지원)
+- `/saved` - 저장한 프로모션 (로그인 필요)
+- `/mypage` - 마이페이지 (로그인 필요)
+
+## 🔧 개발 정보
+
+### 주요 라이브러리
+- `@supabase/ssr` - Supabase SSR 클라이언트
+- `@serwist/next` - PWA Service Worker
+- `lucide-react` - 아이콘
+- `prisma` - ORM (스키마 관리용)
+
+### 빌드 시 주의사항
+- PWA는 프로덕션 빌드에서만 활성화됩니다
+- Serwist는 Webpack 필수 (Turbopack 미지원)
+- Service Worker 파일은 `.gitignore`에 포함
 
 ## 📄 라이센스
 
