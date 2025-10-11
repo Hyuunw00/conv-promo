@@ -84,7 +84,7 @@ export default function FilterBottomSheet({
 
       {/* 바텀시트 */}
       <div
-        className="fixed z-[60] bottom-0 left-0 right-0 bg-white rounded-t-2xl  animate-slide-up flex flex-col max-w-md mx-auto"
+        className="fixed z-40 bottom-0 left-0 right-0 bg-white rounded-t-2xl  animate-slide-up flex flex-col max-w-md mx-auto"
         style={{ maxHeight: "calc(100vh - 80px)" }}
       >
         {/* 헤더 */}

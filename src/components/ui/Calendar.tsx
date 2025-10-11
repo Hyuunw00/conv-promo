@@ -108,7 +108,6 @@ export default function Calendar({
     }
   };
 
-
   const monthNames = [
     "1월",
     "2월",
@@ -128,7 +127,7 @@ export default function Calendar({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/20 z-50 flex items-start justify-center pt-20">
+    <div className="fixed inset-0 bg-black/20 z-40 flex items-start justify-center pt-20">
       <div
         ref={modalRef}
         className="w-full max-w-md bg-white rounded-2xl shadow-xl p-4 animate-slide-down mx-4"
@@ -152,7 +151,6 @@ export default function Calendar({
             </svg>
           </button>
         </div>
-
 
         {/* 캘린더 헤더 */}
         <div className="flex items-center justify-between mb-3">

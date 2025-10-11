@@ -105,9 +105,9 @@ export default function SearchModal() {
       />
 
       {/* 모달 콘텐츠 - 상단에 위치, 적절한 크기 */}
-      <div className="relative w-full max-w-md mt-20 mx-4 min-h-[500px] max-h-[70vh] bg-white rounded-2xl shadow-2xl overflow-hidden z-10 animate-slide-down flex flex-col">
+      <div className="relative w-full max-w-md mt-20 mx-4 min-h-[500px] max-h-[70vh] bg-white rounded-2xl shadow-2xl overflow-hidden animate-slide-down flex flex-col">
         {/* 검색 헤더 */}
-        <div className="sticky top-0 z-10 bg-white border-b">
+        <div className="sticky top-0  bg-white border-b">
           <div className="flex items-center gap-3 p-4">
             <button onClick={handleClose} className="p-1">
               <svg

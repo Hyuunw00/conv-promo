@@ -18,15 +18,14 @@ export default async function SavedPage() {
   }
 
   // 초기 데이터만 가져오기 (10개)
-  const { data: allSavedPromos } = await SavedPromotionService.getSavedPromotions(
-    user.email
-  );
+  const { data: allSavedPromos } =
+    await SavedPromotionService.getSavedPromotions(user.email);
   const initialPromos = allSavedPromos?.slice(0, 10) || [];
 
   return (
     <>
       {/* 헤더 섹션 */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

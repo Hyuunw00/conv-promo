@@ -98,7 +98,7 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* 헤더 */}
-      <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-200">
         <div className="flex items-center gap-3 p-4">
           <button
             onClick={handleClose}

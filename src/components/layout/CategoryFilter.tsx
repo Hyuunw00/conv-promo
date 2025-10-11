@@ -21,7 +21,7 @@ export default function CategoryFilter({
   onCategoryChange,
 }: CategoryFilterProps) {
   return (
-    <div className="sticky top-[176px] z-40 bg-white  px-3 py-2">
+    <div className="sticky top-[176px]  bg-white  px-3 py-2">
       <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
         <button
           onClick={() => onCategoryChange("ALL")}

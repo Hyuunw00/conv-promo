@@ -18,7 +18,12 @@ interface HeaderProps {
   onDateRangeChange: (start: string, end: string) => void;
   initialStartDate: string;
   initialEndDate: string;
-  onFiltersChange?: (brand: string, category: string, deal: string, sort: string) => void;
+  onFiltersChange?: (
+    brand: string,
+    category: string,
+    deal: string,
+    sort: string
+  ) => void;
 }
 
 export default function Header({
@@ -45,7 +50,12 @@ export default function Header({
   }) => {
     // 한 번에 모든 필터 업데이트
     if (onFiltersChange) {
-      onFiltersChange(filters.brand, filters.category, filters.deal, filters.sort);
+      onFiltersChange(
+        filters.brand,
+        filters.category,
+        filters.deal,
+        filters.sort
+      );
     } else {
       // 폴백: 개별 호출 (하위 호환성)
       onBrandChange(filters.brand);
@@ -62,7 +72,7 @@ export default function Header({
   ].filter(Boolean).length;
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm">
+    <header className="sticky top-0 z-40 bg-white shadow-sm">
       <div className="px-3 py-3">
         <div className="flex items-center justify-between">
           {/* 로고 */}
