@@ -1,3 +1,5 @@
+// 현재 미사용 
+
 generator client {
   provider = "prisma-client-js"
 }
