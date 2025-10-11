@@ -39,3 +39,23 @@ export const signInWithKakao = async () => {
   });
   return { data, error };
 };
+
+// 회원 탈퇴
+export const deleteAccount = async () => {
+  try {
+    const response = await fetch('/api/auth/delete-account', {
+      method: 'DELETE',
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: new Error(data.error || '회원 탈퇴에 실패했습니다') };
+    }
+
+    return { error: null };
+  } catch (error) {
+    console.error('Delete account error:', error);
+    return { error: new Error('회원 탈퇴 중 오류가 발생했습니다') };
+  }
+};

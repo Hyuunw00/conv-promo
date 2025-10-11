@@ -27,3 +27,21 @@ export async function createClient() {
     }
   );
 }
+
+// Admin client for server-side operations
+export async function createAdminClient() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return [];
+        },
+        setAll() {
+          // Admin client doesn't need cookies
+        },
+      },
+    }
+  );
+}

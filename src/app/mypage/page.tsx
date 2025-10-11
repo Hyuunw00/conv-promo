@@ -3,8 +3,18 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { signOut } from "@/lib/auth";
+import { signOut, deleteAccount } from "@/lib/auth";
+import { toast } from "sonner";
 import Loading from "@/components/ui/Loading";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  Heart,
+  Info,
+  User,
+  ExternalLink,
+  ArrowRight,
+} from "lucide-react";
 
 export default function MyPage() {
   const router = useRouter();
@@ -26,6 +36,20 @@ export default function MyPage() {
     setLoggingOut(false);
   };
 
+  const handleDeleteAccount = async () => {
+    if (!confirm("정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.")) {
+      return;
+    }
+
+    const { error } = await deleteAccount();
+    if (error) {
+      toast.error("회원 탈퇴에 실패했습니다");
+    } else {
+      toast.success("회원 탈퇴가 완료되었습니다");
+      router.push("/");
+    }
+  };
+
   if (loading) {
     return <Loading />;
   }
@@ -39,7 +63,15 @@ export default function MyPage() {
       {/* 헤더 */}
       <header className="bg-white shadow-sm">
         <div className="px-4 py-4">
-          <h1 className="text-xl font-bold">마이페이지</h1>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <h1 className="text-xl font-bold">마이페이지</h1>
+          </div>
         </div>
       </header>
 
@@ -47,12 +79,22 @@ export default function MyPage() {
       <div className="bg-white mt-2">
         <div className="px-4 py-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br   rounded-full flex items-center justify-center">
-              <img
-                src={user.user_metadata.avatar_url}
-                alt="profile"
-                className="w-full h-full rounded-full"
-              />
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center overflow-hidden">
+              {user.user_metadata.avatar_url ? (
+                <img
+                  src={user.user_metadata.avatar_url}
+                  alt="profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    if (e.currentTarget.parentElement) {
+                      e.currentTarget.parentElement.innerHTML = `<div class="flex items-center justify-center w-full h-full"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>`;
+                    }
+                  }}
+                />
+              ) : (
+                <User className="w-8 h-8 text-white" />
+              )}
             </div>
             <div className="flex-1">
               <p className="text-lg font-medium">{user.email}</p>
@@ -73,126 +115,32 @@ export default function MyPage() {
             className="w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <svg
-                className="w-5 h-5 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                />
-              </svg>
+              <Heart className="w-5 h-5 text-gray-600" />
               <span className="text-gray-900">저장한 프로모션</span>
             </div>
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-
-          <button className="w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <svg
-                className="w-5 h-5 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                />
-              </svg>
-              <span className="text-gray-900">알림 설정</span>
-            </div>
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+            <ArrowRight className="w-5 h-5 text-gray-400 rotate-180" />
           </button>
         </div>
       </div>
 
-      {/* 앱 정보 섹션 */}
+      {/* 서비스 정보 섹션 */}
       <div className="bg-white mt-2">
         <div className="divide-y divide-gray-200">
-          <button className="w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <svg
-                className="w-5 h-5 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span className="text-gray-900">앱 정보</span>
-            </div>
-            <span className="text-sm text-gray-500">v1.0.0</span>
-          </button>
-
-          {/* <button
+          <a
+            href="https://github.com/Hyuunw00/conv-promo"
+            target="_blank"
+            rel="noopener noreferrer"
             className="w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <svg
-                className="w-5 h-5 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <span className="text-gray-900">이용약관</span>
+              <Info className="w-5 h-5 text-gray-600" />
+              <span className="text-gray-900">서비스 정보</span>
             </div>
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button> */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500">v1.0.0</span>
+              <ExternalLink className="w-4 h-4 text-gray-400" />
+            </div>
+          </a>
         </div>
       </div>
 
@@ -204,6 +152,16 @@ export default function MyPage() {
           className="w-full py-3 text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
         >
           {loggingOut ? "로그아웃 중..." : "로그아웃"}
+        </button>
+      </div>
+
+      {/* 회원 탈퇴 버튼 */}
+      <div className="px-4 mt-2 pb-4">
+        <button
+          onClick={handleDeleteAccount}
+          className="text-xs text-gray-400 underline hover:text-gray-600 transition-colors"
+        >
+          회원 탈퇴
         </button>
       </div>
     </div>
