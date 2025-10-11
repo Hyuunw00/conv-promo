@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { signOut, deleteAccount } from "@/lib/auth";
 import { toast } from "sonner";
 import Loading from "@/components/ui/Loading";
+import NotificationPermission from "@/components/notifications/NotificationPermission";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -37,7 +38,11 @@ export default function MyPage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!confirm("정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.")) {
+    if (
+      !confirm(
+        "정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다."
+      )
+    ) {
       return;
     }
 
@@ -79,7 +84,7 @@ export default function MyPage() {
       <div className="bg-white mt-2">
         <div className="px-4 py-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center overflow-hidden">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden">
               {user.user_metadata.avatar_url ? (
                 <img
                   src={user.user_metadata.avatar_url}
@@ -153,6 +158,11 @@ export default function MyPage() {
         >
           {loggingOut ? "로그아웃 중..." : "로그아웃"}
         </button>
+      </div>
+
+      {/* 알림 설정 섹션 */}
+      <div className="px-4 mt-4">
+        <NotificationPermission />
       </div>
 
       {/* 회원 탈퇴 버튼 */}

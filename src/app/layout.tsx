@@ -1,5 +1,6 @@
 import "@/styles/global.css";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import PWAInstallPrompt from "@/components/notifications/PWAInstallPrompt";
 import Script from "next/script";
 import { Toaster } from "sonner";
 
@@ -33,6 +34,7 @@ export default function RootLayout({
           {children}
           {modal}
           <BottomNavigation />
+          <PWAInstallPrompt />
           <Toaster position="top-center" />
         </div>
         {process.env.NODE_ENV === "development" && (
