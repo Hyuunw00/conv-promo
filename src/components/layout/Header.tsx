@@ -14,10 +14,11 @@ interface HeaderProps {
   onDealChange: (deal: string) => void;
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
+  selectedSort: string;
   onDateRangeChange: (start: string, end: string) => void;
   initialStartDate: string;
   initialEndDate: string;
-  onFiltersChange?: (brand: string, category: string, deal: string) => void;
+  onFiltersChange?: (brand: string, category: string, deal: string, sort: string) => void;
 }
 
 export default function Header({
@@ -27,6 +28,7 @@ export default function Header({
   onDealChange,
   selectedCategory,
   onCategoryChange,
+  selectedSort,
   onDateRangeChange,
   initialStartDate,
   initialEndDate,
@@ -39,10 +41,11 @@ export default function Header({
     brand: string;
     category: string;
     deal: string;
+    sort: string;
   }) => {
     // 한 번에 모든 필터 업데이트
     if (onFiltersChange) {
-      onFiltersChange(filters.brand, filters.category, filters.deal);
+      onFiltersChange(filters.brand, filters.category, filters.deal, filters.sort);
     } else {
       // 폴백: 개별 호출 (하위 호환성)
       onBrandChange(filters.brand);
@@ -128,6 +131,7 @@ export default function Header({
         selectedBrand={selectedBrand}
         selectedCategory={selectedCategory}
         selectedDeal={selectedDeal}
+        selectedSort={selectedSort}
         onApply={handleFilterApply}
       />
     </header>

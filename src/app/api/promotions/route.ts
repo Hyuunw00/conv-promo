@@ -10,8 +10,12 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || undefined;
     const startDate = searchParams.get('startDate') || undefined;
     const endDate = searchParams.get('endDate') || undefined;
+    const orderByParam = searchParams.get('orderBy') || undefined;
     const limit = Number(searchParams.get('limit')) || 20;
     const offset = Number(searchParams.get('offset')) || 0;
+
+    const orderBy = orderByParam as "start_date" | "end_date" | "created_at" | "saved_count" | undefined;
+    const ascending = false; // 둘 다 내림차순 (saved_count 큰순, start_date 큰순)
 
     const { data, error, hasMore } = await PromotionService.fetchPromotions({
       brandName,
@@ -19,6 +23,8 @@ export async function GET(request: NextRequest) {
       category,
       startDate,
       endDate,
+      orderBy,
+      ascending,
       limit,
       offset,
     });

@@ -13,7 +13,7 @@ export interface FetchPromotionsOptions {
   category?: string;
   startDate?: string;
   endDate?: string;
-  orderBy?: "start_date" | "end_date" | "created_at";
+  orderBy?: "start_date" | "end_date" | "created_at" | "saved_count";
   ascending?: boolean;
 }
 
@@ -48,7 +48,7 @@ export class PromotionService {
       let query = supabase
         .from("promo_with_brand")
         .select(
-          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url, description",
+          "id, brand_name, title, raw_title, deal_type, start_date, end_date, sale_price, normal_price, category, image_url, barcode, source_url, description, saved_count",
           { count: "exact" }
         )
         .order(orderBy, { ascending });

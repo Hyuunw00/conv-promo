@@ -8,6 +8,7 @@ interface UseInfinitePromotionsOptions {
   category?: string;
   startDate?: string;
   endDate?: string;
+  orderBy?: string;
 }
 
 export function useInfinitePromotions({
@@ -17,6 +18,7 @@ export function useInfinitePromotions({
   category,
   startDate,
   endDate,
+  orderBy,
 }: UseInfinitePromotionsOptions) {
   const [promos, setPromos] = useState<Promotion[]>(initialData || []);
   const [loading, setLoading] = useState(false);
@@ -39,6 +41,7 @@ export function useInfinitePromotions({
       if (category) params.append('category', category);
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
+      if (orderBy) params.append('orderBy', orderBy);
       params.append('limit', String(ITEMS_PER_PAGE));
       params.append('offset', '0');
 
@@ -58,7 +61,7 @@ export function useInfinitePromotions({
 
     setPage(1);
     setLoading(false);
-  }, [brandName, dealType, category, startDate, endDate]);
+  }, [brandName, dealType, category, startDate, endDate, orderBy]);
 
   // 더 많은 데이터 로드 (스크롤시)
   const fetchMore = useCallback(async () => {
@@ -73,6 +76,7 @@ export function useInfinitePromotions({
       if (category) params.append('category', category);
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
+      if (orderBy) params.append('orderBy', orderBy);
       params.append('limit', String(ITEMS_PER_PAGE));
       params.append('offset', String(page * ITEMS_PER_PAGE));
 
@@ -99,14 +103,14 @@ export function useInfinitePromotions({
     }
 
     setLoadingMore(false);
-  }, [page, hasMore, loadingMore, brandName, dealType, category, startDate, endDate]);
+  }, [page, hasMore, loadingMore, brandName, dealType, category, startDate, endDate, orderBy]);
 
   // 필터 변경시 데이터 리셋
   useEffect(() => {
     setPage(0);
     setHasMore(true);
     fetchInitialData();
-  }, [brandName, dealType, category, startDate, endDate]);
+  }, [brandName, dealType, category, startDate, endDate, orderBy]);
 
   return {
     promos,

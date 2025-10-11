@@ -90,7 +90,7 @@ export default function PromoCardEnhanced({
           <BrandBadge brandName={promotion.brand_name} />
           <div className="flex items-center gap-2">
             <DealBadge dealType={promotion.deal_type} />
-            {promotion.saved_count && promotion.saved_count > 0 && (
+            {promotion.saved_count != null && promotion.saved_count > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-1 bg-pink-50 text-pink-600 rounded-full text-xs font-medium">
                 <Users className="w-3 h-3" />
                 {promotion.saved_count}

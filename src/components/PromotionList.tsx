@@ -17,6 +17,7 @@ interface PromotionListProps {
     category: string;
     startDate: string;
     endDate: string;
+    orderBy?: string;
   };
 }
 

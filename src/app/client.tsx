@@ -14,6 +14,7 @@ interface ClientProps {
   initialBrand: string;
   initialCategory: string;
   initialDeal: string;
+  initialSort: string;
 }
 
 export default function Client({
@@ -23,6 +24,7 @@ export default function Client({
   initialBrand,
   initialCategory,
   initialDeal,
+  initialSort,
 }: ClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,8 +32,8 @@ export default function Client({
   // URL 쿼리가 없고 로컬 스토리지에 저장된 필터가 있으면 사용
   const getInitialFilters = () => {
     // URL 쿼리가 있으면 우선 사용
-    if (initialBrand !== "ALL" || initialCategory !== "ALL" || initialDeal !== "ALL") {
-      return { brand: initialBrand, category: initialCategory, deal: initialDeal };
+    if (initialBrand !== "ALL" || initialCategory !== "ALL" || initialDeal !== "ALL" || initialSort !== "saved") {
+      return { brand: initialBrand, category: initialCategory, deal: initialDeal, sort: initialSort };
     }
 
     // 로컬 스토리지 확인
@@ -44,6 +46,7 @@ export default function Client({
             brand: filters.brand || "ALL",
             category: filters.category || "ALL",
             deal: filters.deal || "ALL",
+            sort: filters.sort || "saved",
           };
         }
       } catch (error) {
@@ -52,13 +55,14 @@ export default function Client({
     }
 
     // 기본값
-    return { brand: "ALL", category: "ALL", deal: "ALL" };
+    return { brand: "ALL", category: "ALL", deal: "ALL", sort: "saved" };
   };
 
   const initialFilters = getInitialFilters();
   const [selectedBrand, setSelectedBrand] = useState<string>(initialFilters.brand);
   const [selectedDeal, setSelectedDeal] = useState<string>(initialFilters.deal);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialFilters.category);
+  const [selectedSort, setSelectedSort] = useState<string>(initialFilters.sort);
 
   const [selectedDateRange, setSelectedDateRange] = useState({
     start: defaultStartDate,
@@ -69,7 +73,8 @@ export default function Client({
   const updateURL = (
     brand: string,
     category: string,
-    deal: string
+    deal: string,
+    sort: string
   ) => {
     const params = new URLSearchParams(searchParams);
 
@@ -92,6 +97,12 @@ export default function Client({
       params.delete("deal");
     }
 
+    if (sort !== "saved") {
+      params.set("sort", sort);
+    } else {
+      params.delete("sort");
+    }
+
     const queryString = params.toString();
     const newUrl = queryString ? `/?${queryString}` : "/";
     router.replace(newUrl, { scroll: false });
@@ -100,7 +111,7 @@ export default function Client({
     try {
       localStorage.setItem(
         "promo-filters",
-        JSON.stringify({ brand, category, deal })
+        JSON.stringify({ brand, category, deal, sort })
       );
     } catch (error) {
       console.error("Failed to save filters to localStorage:", error);
@@ -108,30 +119,31 @@ export default function Client({
   };
 
   // 필터 변경 핸들러 (한 번에 모두 처리)
-  const handleFiltersChange = (brand: string, category: string, deal: string) => {
+  const handleFiltersChange = (brand: string, category: string, deal: string, sort: string) => {
     setSelectedBrand(brand);
     setSelectedCategory(category);
     setSelectedDeal(deal);
-    updateURL(brand, category, deal);
+    setSelectedSort(sort);
+    updateURL(brand, category, deal, sort);
   };
 
   const handleBrandChange = (brand: string) => {
-    handleFiltersChange(brand, selectedCategory, selectedDeal);
+    handleFiltersChange(brand, selectedCategory, selectedDeal, selectedSort);
   };
 
   const handleCategoryChange = (category: string) => {
-    handleFiltersChange(selectedBrand, category, selectedDeal);
+    handleFiltersChange(selectedBrand, category, selectedDeal, selectedSort);
   };
 
   const handleDealChange = (deal: string) => {
-    handleFiltersChange(selectedBrand, selectedCategory, deal);
+    handleFiltersChange(selectedBrand, selectedCategory, deal, selectedSort);
   };
 
   // 초기 로드 시 로컬 스토리지 필터를 URL에 반영
   useEffect(() => {
-    if (initialBrand === "ALL" && initialCategory === "ALL" && initialDeal === "ALL") {
-      if (initialFilters.brand !== "ALL" || initialFilters.category !== "ALL" || initialFilters.deal !== "ALL") {
-        updateURL(initialFilters.brand, initialFilters.category, initialFilters.deal);
+    if (initialBrand === "ALL" && initialCategory === "ALL" && initialDeal === "ALL" && initialSort === "saved") {
+      if (initialFilters.brand !== "ALL" || initialFilters.category !== "ALL" || initialFilters.deal !== "ALL" || initialFilters.sort !== "saved") {
+        updateURL(initialFilters.brand, initialFilters.category, initialFilters.deal, initialFilters.sort);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -143,6 +155,7 @@ export default function Client({
         selectedDeal={selectedDeal}
         selectedBrand={selectedBrand}
         selectedCategory={selectedCategory}
+        selectedSort={selectedSort}
         onBrandChange={handleBrandChange}
         onDealChange={handleDealChange}
         onCategoryChange={handleCategoryChange}
@@ -162,6 +175,7 @@ export default function Client({
             category: selectedCategory,
             startDate: selectedDateRange.start,
             endDate: selectedDateRange.end,
+            orderBy: selectedSort === "saved" ? "saved_count" : "start_date",
           }}
         />
       </main>

@@ -13,7 +13,13 @@ interface FilterBottomSheetProps {
   selectedBrand: string;
   selectedCategory: string;
   selectedDeal: string;
-  onApply: (filters: { brand: string; category: string; deal: string }) => void;
+  selectedSort: string;
+  onApply: (filters: {
+    brand: string;
+    category: string;
+    deal: string;
+    sort: string;
+  }) => void;
 }
 
 const categoryConfig: Record<UnifiedCategory, { icon: string; label: string }> =
@@ -31,12 +37,13 @@ export default function FilterBottomSheet({
   selectedBrand,
   selectedCategory,
   selectedDeal,
+  selectedSort,
   onApply,
 }: FilterBottomSheetProps) {
   const [tempBrand, setTempBrand] = useState(selectedBrand);
   const [tempCategory, setTempCategory] = useState(selectedCategory);
   const [tempDeal, setTempDeal] = useState(selectedDeal);
-
+  const [tempSort, setTempSort] = useState(selectedSort);
   // body 스크롤 방지
   useEffect(() => {
     if (isOpen) {
@@ -54,6 +61,7 @@ export default function FilterBottomSheet({
       brand: tempBrand,
       category: tempCategory,
       deal: tempDeal,
+      sort: tempSort,
     });
     onClose();
   };
@@ -187,6 +195,33 @@ export default function FilterBottomSheet({
                   <span>{deal.label}</span>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* 정렬 */}
+          <div>
+            <h3 className="text-sm font-semibold mb-3 text-gray-700">정렬</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setTempSort("saved")}
+                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  tempSort === "saved"
+                    ? "bg-gray-900 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                저장순
+              </button>
+              <button
+                onClick={() => setTempSort("recent")}
+                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  tempSort === "recent"
+                    ? "bg-gray-900 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                최신순
+              </button>
             </div>
           </div>
         </div>

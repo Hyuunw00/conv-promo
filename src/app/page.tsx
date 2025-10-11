@@ -7,6 +7,7 @@ interface HomeProps {
     brand?: string;
     category?: string;
     deal?: string;
+    sort?: string;
   }>;
 }
 
@@ -17,6 +18,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const brandName = params.brand || "ALL";
   const dealType = params.deal || "ALL";
   const category = params.category || "ALL";
+  const sort = params.sort || "saved";
 
   const today = toKST(new Date());
   const defaultEndDate = new Date(today);
@@ -26,6 +28,9 @@ export default async function Home({ searchParams }: HomeProps) {
   const startDate = getKSTDateString(today);
   const endDate = getKSTDateString(defaultEndDate);
 
+  const orderBy = sort === "saved" ? "saved_count" : "start_date";
+  const ascending = false; // 둘 다 내림차순 (saved_count 큰순, start_date 큰순)
+
   const { data: initialData, error } = await PromotionService.fetchPromotions({
     limit: 5,
     offset: 0,
@@ -34,6 +39,8 @@ export default async function Home({ searchParams }: HomeProps) {
     category,
     startDate,
     endDate,
+    orderBy,
+    ascending,
   });
 
   return (
@@ -44,6 +51,7 @@ export default async function Home({ searchParams }: HomeProps) {
       initialBrand={brandName}
       initialCategory={category}
       initialDeal={dealType}
+      initialSort={sort}
     />
   );
 }
