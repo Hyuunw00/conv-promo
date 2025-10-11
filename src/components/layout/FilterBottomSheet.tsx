@@ -78,13 +78,13 @@ export default function FilterBottomSheet({
     <>
       {/* 배경 오버레이 */}
       <div
-        className="fixed  inset-0 bg-black/40 animate-fade-in"
+        className="fixed inset-0 z-50 bg-black/40 animate-fade-in"
         onClick={onClose}
       />
 
       {/* 바텀시트 */}
       <div
-        className="fixed z-40 bottom-0 left-0 right-0 bg-white rounded-t-2xl  animate-slide-up flex flex-col max-w-md mx-auto"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl animate-slide-up flex flex-col max-w-md mx-auto"
         style={{ maxHeight: "calc(100vh - 80px)" }}
       >
         {/* 헤더 */}
@@ -227,7 +227,7 @@ export default function FilterBottomSheet({
         </div>
 
         {/* 하단 버튼 */}
-        <div className="p-4 border-t bg-white flex-shrink-0">
+        <div className="p-4 pb-20 border-t bg-white flex-shrink-0">
           <div className="flex gap-2">
             <button
               onClick={handleReset}

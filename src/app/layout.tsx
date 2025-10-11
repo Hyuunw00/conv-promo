@@ -33,7 +33,7 @@ export default function RootLayout({
           {children}
           {modal}
           <BottomNavigation />
-          <Toaster position="bottom-center" offset="80px" />
+          <Toaster position="top-center" />
         </div>
         {process.env.NODE_ENV === "development" && (
           <Script id="unregister-sw" strategy="afterInteractive">
