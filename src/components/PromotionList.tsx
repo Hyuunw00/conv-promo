@@ -8,6 +8,7 @@ import { Promotion } from "@/types/promotion";
 import { getCurrentUser } from "@/lib/auth";
 import { toggleSavePromo } from "@/app/actions/saved-actions";
 import { User } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 interface PromotionListProps {
   initialData: Promotion[];
@@ -65,7 +66,7 @@ export default function PromotionList({
   const handleSaveToggle = useCallback(
     async (promoId: string) => {
       if (!user?.email) {
-        alert("로그인이 필요합니다.");
+        toast.error("로그인이 필요합니다");
         return;
       }
 
@@ -76,14 +77,19 @@ export default function PromotionList({
             const newSet = new Set(prev);
             if (result.saved) {
               newSet.add(promoId);
+              toast.success("프로모션을 저장했습니다");
             } else {
               newSet.delete(promoId);
+              toast.success("저장을 해제했습니다");
             }
             return newSet;
           });
+        } else {
+          toast.error("처리 중 오류가 발생했습니다");
         }
       } catch (error) {
         console.error("Error toggling save:", error);
+        toast.error("처리 중 오류가 발생했습니다");
       }
     },
     [user]

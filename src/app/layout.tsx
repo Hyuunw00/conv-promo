@@ -1,6 +1,7 @@
 import "@/styles/global.css";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import Script from "next/script";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -32,6 +33,7 @@ export default function RootLayout({
           {children}
           {modal}
           <BottomNavigation />
+          <Toaster position="bottom-center" offset="80px" />
         </div>
         {process.env.NODE_ENV === "development" && (
           <Script id="unregister-sw" strategy="afterInteractive">
