@@ -18,8 +18,6 @@ export default function PWAInstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  console.log("showPrompt", showPrompt);
-
   useEffect(() => {
     // PWA 설치 감지
     const handleAppInstalled = () => {

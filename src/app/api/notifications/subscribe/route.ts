@@ -18,17 +18,23 @@ export async function POST(request: Request) {
       );
     }
 
+    // 기존 구독 삭제 (같은 user_email의 이전 구독 제거)
+    if (user?.email) {
+      await supabase
+        .from('push_subscriptions')
+        .delete()
+        .eq('user_email', user.email);
+    }
+
     // DB에 저장
     const { error } = await supabase
       .from('push_subscriptions')
-      .upsert({
+      .insert({
         endpoint: subscription.endpoint,
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,
         user_email: user?.email || null,
         updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'endpoint',
       });
 
     if (error) {

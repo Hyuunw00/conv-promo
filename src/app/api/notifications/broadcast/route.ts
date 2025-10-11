@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin";
 import webpush from "web-push";
 
 // VAPID 설정
@@ -11,6 +12,21 @@ webpush.setVapidDetails(
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+
+    // 현재 사용자 확인
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // admin 권한 체크
+    try {
+      await requireAdmin(user?.email);
+    } catch (error) {
+      return NextResponse.json(
+        { error: "관리자 권한이 필요합니다" },
+        { status: 403 }
+      );
+    }
+
     const { title, body, url, tag } = await request.json();
 
     if (!title || !body) {
@@ -19,8 +35,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    const supabase = await createClient();
 
     // 모든 구독자 조회
     const { data: subscriptions, error } = await supabase
@@ -65,11 +79,11 @@ export async function POST(request: Request) {
 
           await webpush.sendNotification(pushSubscription, payload);
           return { success: true, endpoint: sub.endpoint };
-        } catch (error: any) {
+        } catch (error) {
           console.error("Send notification error:", error);
 
           // 410 Gone: 구독이 만료됨 -> DB에서 삭제
-          if (error.statusCode === 410) {
+          if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 410) {
             await supabase
               .from("push_subscriptions")
               .delete()
@@ -79,7 +93,7 @@ export async function POST(request: Request) {
           return {
             success: false,
             endpoint: sub.endpoint,
-            error: error.message,
+            error: error instanceof Error ? error.message : 'Unknown error',
           };
         }
       })

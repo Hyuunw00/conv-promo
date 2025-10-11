@@ -14,19 +14,37 @@ import {
   Info,
   User,
   ExternalLink,
-  ArrowRight,
+  Shield,
 } from "lucide-react";
 
 export default function MyPage() {
   const router = useRouter();
   const { user, loading, isAuthenticated } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push("/auth/login");
     }
   }, [loading, isAuthenticated, router]);
+
+  // admin 권한 체크
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user?.email) return;
+
+      try {
+        const response = await fetch("/api/admin/check");
+        const data = await response.json();
+        setIsAdmin(data.isAdmin);
+      } catch (error) {
+        console.error("Admin check error:", error);
+      }
+    };
+
+    checkAdmin();
+  }, [user]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -114,6 +132,20 @@ export default function MyPage() {
 
       {/* 메뉴 섹션 */}
       <div className="bg-white mt-2">
+        {/* 관리자 전용 메뉴 */}
+        {isAdmin && (
+          <button
+            onClick={() => router.push("/admin")}
+            className="w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-blue-600" />
+              <span className="text-gray-900">관리자 메뉴</span>
+            </div>
+            <ArrowLeft className="w-5 h-5 text-gray-400 rotate-180" />
+          </button>
+        )}
+
         <div className="divide-y divide-gray-200">
           <button
             onClick={() => router.push("/saved")}
@@ -123,7 +155,7 @@ export default function MyPage() {
               <Heart className="w-5 h-5 text-gray-600" />
               <span className="text-gray-900">저장한 프로모션</span>
             </div>
-            <ArrowRight className="w-5 h-5 text-gray-400 rotate-180" />
+            <ArrowLeft className="w-5 h-5 text-gray-400 rotate-180" />
           </button>
         </div>
       </div>
