@@ -1,0 +1,55 @@
+name: Scheduled Notifications
+
+on:
+  schedule:
+    # 매달 1일 오전 11시 (KST) = 매달 1일 2시 (UTC)
+    - cron: "0 2 1 * *"
+
+    # 매달 28~30일 오전 11시 (마지막날 하루 전 체크용)
+    # API에서 실제 마지막날 하루 전인지 확인 후 발송
+    - cron: "0 2 28-30 * *"
+
+  workflow_dispatch:
+    # 수동 실행 - 테스트용
+
+jobs:
+  send-notification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    env:
+      WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+      WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+
+    steps:
+      - name: Trigger notification check
+        run: |
+          echo "=== Triggering Notification Check ==="
+          echo "Event: ${{ github.event_name }}"
+          echo "Date: $(date)"
+
+          if [ -z "$WEBHOOK_URL" ] || [ -z "$WEBHOOK_SECRET" ]; then
+            echo "❌ WEBHOOK_URL or WEBHOOK_SECRET not configured"
+            exit 1
+          fi
+
+          # API 호출 (이벤트 타입 전달)
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "$WEBHOOK_URL/api/notifications/scheduled" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $WEBHOOK_SECRET" \
+            -d "{\"trigger\": \"${{ github.event_name }}\"}")
+
+          # HTTP 상태 코드 추출
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ Success"
+          else
+            echo "❌ Failed"
+            exit 1
+          fi
