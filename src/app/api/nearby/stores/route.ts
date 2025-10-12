@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { BrandType, BRAND_KEYWORDS, Store } from "@/types/store";
 
 const NAVER_API_URL = "https://openapi.naver.com/v1/search/local.json";
+const NAVER_REVERSE_GEOCODE_URL =
+  "https://maps.apigw.ntruss.com/map-reversegeocode/v2/gc";
 
 interface NaverPlace {
   title: string;
@@ -54,11 +56,60 @@ function calculateDistance(
   return R * c; // 미터 단위
 }
 
+// 좌표를 주소로 변환 (Reverse Geocoding)
+async function getAddressFromCoords(
+  lat: number,
+  lon: number,
+  clientId: string,
+  clientSecret: string
+): Promise<string | null> {
+  try {
+    const url = `${NAVER_REVERSE_GEOCODE_URL}?coords=${lon},${lat}&output=json&orders=addr`;
+
+    console.log("🔍 Reverse Geocoding URL:", url);
+    console.log("🔑 Using NCP Client ID:", clientId?.substring(0, 10) + "...");
+
+    const response = await fetch(url, {
+      headers: {
+        "x-ncp-apigw-api-key-id": clientId,
+        "x-ncp-apigw-api-key": clientSecret,
+      },
+    });
+
+    console.log("📡 Reverse Geocoding Response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Reverse geocoding failed:", response.status, errorText);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log("✅ Reverse Geocoding data:", JSON.stringify(data, null, 2));
+
+    if (data.status.code === 0 && data.results.length > 0) {
+      const result = data.results[0];
+      const region = result.region;
+
+      // 시/구/동 정보 추출
+      const area1 = region.area1?.name || ""; // 시/도
+      const area2 = region.area2?.name || ""; // 시/군/구
+      const area3 = region.area3?.name || ""; // 읍/면/동
+
+      return `${area1} ${area2} ${area3}`.trim();
+    }
+
+    return null;
+  } catch (error) {
+    console.error("❌ Reverse geocoding error:", error);
+    return null;
+  }
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const latitude = searchParams.get("latitude");
+  const latitude = searchParams.get("latitude"); // 중심 좌표
   const longitude = searchParams.get("longitude");
-  const radius = searchParams.get("radius") || "1000"; // 기본 1km
   const brand = searchParams.get("brand") as BrandType | "ALL";
 
   // 필수 파라미터 검증
@@ -70,8 +121,10 @@ export async function GET(request: Request) {
   }
 
   // API 키 확인
-  const clientId = process.env.NAVER_CLIENT_ID;
-  const clientSecret = process.env.NAVER_CLIENT_SECRET;
+  const clientId = process.env.NAVER_SEARCH_CLIENT_ID; // 검색 API (구 개발자센터)
+  const clientSecret = process.env.NAVER_SEARCH_CLIENT_SECRET;
+  const ncpClientId = process.env.NEXT_PUBLIC_NCP_MAPS_CLIENT_ID; // NCP Maps API
+  const ncpClientSecret = process.env.NCP_MAPS_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
     console.error("NAVER_CLIENT_ID or NAVER_CLIENT_SECRET not configured");
@@ -81,12 +134,29 @@ export async function GET(request: Request) {
     );
   }
 
+  if (!ncpClientId || !ncpClientSecret) {
+    console.error("NCP Maps API key not configured");
+    return NextResponse.json(
+      { error: "NCP Maps API key not configured" },
+      { status: 500 }
+    );
+  }
+
   try {
-    console.log("🔍 API Request:", { latitude, longitude, radius, brand });
+    console.log("🔍 API Request:", { latitude, longitude, brand });
 
     const userLat = parseFloat(latitude);
     const userLon = parseFloat(longitude);
-    // const radiusNum = parseInt(radius, 10); // 현재 미사용 (거리 필터링 비활성화)
+
+    // 좌표를 주소로 변환 (NCP API 사용)
+    const locationName = await getAddressFromCoords(
+      userLat,
+      userLon,
+      ncpClientId,
+      ncpClientSecret
+    );
+
+    console.log("📍 Location name:", locationName);
 
     // 검색할 브랜드 결정
     const brandsToSearch: BrandType[] =
@@ -100,11 +170,21 @@ export async function GET(request: Request) {
     const results = await Promise.all(
       brandsToSearch.map(async (brandType) => {
         const keyword = BRAND_KEYWORDS[brandType];
-        const url = `${NAVER_API_URL}?query=${encodeURIComponent(
-          keyword
-        )}&display=15&sort=random`;
 
-        console.log(`📍 Calling Naver API for ${brandType}:`, keyword);
+        // 지역명과 함께 검색 (예: "경기도 파주시 금촌동 GS25")
+        // 지역명이 없으면 "편의점" 키워드만 사용 (전국 검색 후 거리 필터링)
+        const searchQuery = locationName
+          ? `${locationName} ${keyword}`
+          : keyword;
+
+        // 더 많은 결과를 가져와서 거리로 필터링 (지역명 없을 때)
+        const displayCount = locationName ? 50 : 100;
+
+        const url = `${NAVER_API_URL}?query=${encodeURIComponent(
+          searchQuery
+        )}&display=${displayCount}&sort=random`;
+
+        console.log(`📍 Calling Naver API for ${brandType}:`, searchQuery);
 
         const response = await fetch(url, {
           headers: {
@@ -186,7 +266,10 @@ export async function GET(request: Request) {
     const allStores = results.flat().sort((a, b) => a.distance - b.distance);
 
     console.log("✅ Total stores found:", allStores.length);
-    console.log("Stores:", allStores.map((s) => `${s.brand} - ${s.name}`));
+    console.log(
+      "Stores:",
+      allStores.map((s) => `${s.brand} - ${s.name}`)
+    );
 
     return NextResponse.json({
       success: true,

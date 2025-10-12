@@ -107,9 +107,9 @@ declare namespace naver.maps {
 
   class Event {
     static addListener(
-      target: any,
+      target: Map | Marker,
       eventName: string,
-      listener: Function
+      listener: () => void
     ): MapEventListener;
     static removeListener(listener: MapEventListener): void;
   }

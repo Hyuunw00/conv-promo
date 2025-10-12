@@ -4,33 +4,34 @@ import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, MapPin, Navigation, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Store,
-  BrandType,
-  BRAND_COLORS,
-  BRAND_LABELS,
-} from "@/types/store";
-import Loading from "@/components/ui/Loading";
+import { Store, BrandType, BRAND_COLORS, BRAND_LABELS } from "@/types/store";
 import { toast } from "sonner";
 
 export default function NearbyClient() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [stores, setStores] = useState<Store[]>([]);
   const [userLocation, setUserLocation] = useState<{
     latitude: number;
     longitude: number;
-  } | null>(null);
+  } | null>(null); // 사용자의 실제 GPS 위치 (고정)
+  const [mapCenter, setMapCenter] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null); // 지도의 현재 중심 (검색 기준)
   const [selectedBrand, setSelectedBrand] = useState<BrandType | "ALL">("ALL");
-  const [radius, setRadius] = useState<number>(1000); // 기본 1km
+  const [radius, setRadius] = useState<number>(500); // 기본 500 m
   const [locationError, setLocationError] = useState<string>("");
   const [map, setMap] = useState<naver.maps.Map | null>(null);
   const [markers, setMarkers] = useState<naver.maps.Marker[]>([]);
 
   // 네이버 지도 SDK 로드
   useEffect(() => {
-    const clientId = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
-    console.log("🗺️ Loading Naver Maps with Client ID:", clientId?.substring(0, 10) + "...");
+    const clientId = process.env.NEXT_PUBLIC_NCP_MAPS_CLIENT_ID;
+    console.log(
+      "🗺️ Loading Naver Maps with Client ID:",
+      clientId?.substring(0, 10) + "..."
+    );
 
     const script = document.createElement("script");
     script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${clientId}`;
@@ -69,6 +70,7 @@ export default function NearbyClient() {
       (position) => {
         const { latitude, longitude } = position.coords;
         setUserLocation({ latitude, longitude });
+        setMapCenter({ latitude, longitude }); // 초기 지도 중심도 사용자 위치로
         setLocationError("");
       },
       (error) => {
@@ -83,19 +85,17 @@ export default function NearbyClient() {
 
   // 주변 편의점 검색
   const fetchNearbyStores = useCallback(async () => {
-    if (!userLocation) return;
+    if (!mapCenter) return;
 
     setLoading(true);
     console.log("🔍 Fetching nearby stores:", {
-      latitude: userLocation.latitude,
-      longitude: userLocation.longitude,
-      radius,
+      mapCenter: mapCenter,
       brand: selectedBrand,
     });
 
     try {
       const response = await fetch(
-        `/api/nearby/stores?latitude=${userLocation.latitude}&longitude=${userLocation.longitude}&radius=${radius}&brand=${selectedBrand}`
+        `/api/nearby/stores?latitude=${mapCenter.latitude}&longitude=${mapCenter.longitude}&brand=${selectedBrand}`
       );
 
       console.log("📡 API Response status:", response.status);
@@ -108,29 +108,92 @@ export default function NearbyClient() {
 
       const data = await response.json();
       console.log("✅ Stores found:", data.stores?.length || 0, data);
-      setStores(data.stores || []);
+
+      // 거리를 사용자 실제 위치 기준으로 재계산
+      const storesWithDistance = userLocation
+        ? data.stores.map((store: Store) => {
+            const R = 6371e3; // 지구 반지름 (미터)
+            const φ1 = (userLocation.latitude * Math.PI) / 180;
+            const φ2 = (store.latitude * Math.PI) / 180;
+            const Δφ =
+              ((store.latitude - userLocation.latitude) * Math.PI) / 180;
+            const Δλ =
+              ((store.longitude - userLocation.longitude) * Math.PI) / 180;
+
+            const a =
+              Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = Math.round(R * c);
+
+            return { ...store, distance };
+          })
+        : data.stores;
+
+      // 지도 중심에서 반경 내의 편의점만 필터링
+      const filteredStores = storesWithDistance.filter((store: Store) => {
+        // 지도 중심과 편의점 사이의 거리 계산
+        const R = 6371e3;
+        const φ1 = (mapCenter.latitude * Math.PI) / 180;
+        const φ2 = (store.latitude * Math.PI) / 180;
+        const Δφ = ((store.latitude - mapCenter.latitude) * Math.PI) / 180;
+        const Δλ = ((store.longitude - mapCenter.longitude) * Math.PI) / 180;
+
+        const a =
+          Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+          Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distanceFromCenter = Math.round(R * c);
+
+        // 현재 선택된 반경 내의 편의점만 포함
+        return distanceFromCenter <= radius;
+      });
+
+      console.log(
+        `📍 Filtered stores: ${filteredStores.length} / ${storesWithDistance.length} (radius: ${radius}m)`
+      );
+
+      setStores(filteredStores || []);
     } catch (error) {
       console.error("❌ Fetch stores error:", error);
       toast.error("주변 편의점을 불러오는데 실패했습니다");
     } finally {
       setLoading(false);
     }
-  }, [userLocation, radius, selectedBrand]);
+  }, [mapCenter, selectedBrand, radius]); // radius 추가하여 반경 변경 시 재필터링
 
-  // 위치 변경 시 편의점 검색
+  // 지도 중심 또는 브랜드 변경 시 편의점 검색
   useEffect(() => {
-    if (userLocation) {
+    if (mapCenter) {
       fetchNearbyStores();
     }
-  }, [userLocation, radius, selectedBrand, fetchNearbyStores]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapCenter, selectedBrand, radius]);
 
-  // 네이버 지도 초기화 및 업데이트
+  // 현재 위치로 이동하는 함수
+  const moveToCurrentLocation = useCallback(() => {
+    if (!map || !userLocation) return;
+
+    map.setCenter(
+      new naver.maps.LatLng(userLocation.latitude, userLocation.longitude)
+    );
+
+    // 지도 중심을 사용자 위치로 업데이트
+    setMapCenter(userLocation);
+  }, [map, userLocation]);
+
+  // 네이버 지도 초기화
   useEffect(() => {
-    if (!userLocation || !window.naver || !stores.length) return;
+    if (!userLocation || !window.naver || map) return;
 
     // 지도 컨테이너
     const container = document.getElementById("map");
-    if (!container) return;
+    if (!container) {
+      console.log("❌ Map container not found");
+      return;
+    }
+
+    console.log("🗺️ Initializing Naver Map at", userLocation);
 
     // 지도 옵션
     const options = {
@@ -145,17 +208,41 @@ export default function NearbyClient() {
       },
     };
 
-    // 지도 생성 또는 업데이트
-    let mapInstance = map;
-    if (!mapInstance) {
-      mapInstance = new naver.maps.Map(container, options);
-      setMap(mapInstance);
-    } else {
-      mapInstance.setCenter(
-        new naver.maps.LatLng(userLocation.latitude, userLocation.longitude)
-      );
-      mapInstance.setZoom(options.zoom);
-    }
+    const mapInstance = new naver.maps.Map(container, options);
+    setMap(mapInstance);
+    console.log("✅ Naver Map created");
+
+    // 지도 이동/줌 변경 이벤트 (디바운스)
+    let timeoutId: NodeJS.Timeout;
+    naver.maps.Event.addListener(mapInstance, "idle", () => {
+      console.log("🗺️ Map idle event triggered");
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        console.log("🗺️ Debounce completed, updating map center");
+        const center = mapInstance.getCenter();
+        const newCenter = {
+          latitude: center.lat(),
+          longitude: center.lng(),
+        };
+        console.log("🗺️ New center:", newCenter);
+        setMapCenter(newCenter);
+      }, 1000); // 1000ms 디바운스
+    });
+  }, [userLocation, map, radius]);
+
+  // 반경 변경 시 지도 줌 레벨 조정 및 강제 재검색
+  useEffect(() => {
+    if (!map) return;
+
+    const zoomLevel = radius === 500 ? 17 : radius === 1000 ? 15 : 14;
+    map.setZoom(zoomLevel);
+
+    // 줌 변경 후 idle 이벤트가 자동으로 발생하여 재검색됨
+  }, [radius, map]);
+
+  // 마커 업데이트
+  useEffect(() => {
+    if (!map || !userLocation) return;
 
     // 기존 마커 제거
     markers.forEach((marker) => marker.setMap(null));
@@ -166,17 +253,17 @@ export default function NearbyClient() {
         userLocation.latitude,
         userLocation.longitude
       ),
-      map: mapInstance,
+      map: map,
       icon: {
         content: `<div style="
-          width: 20px;
-          height: 20px;
+          width: 4px;
+          height: 4px;
           background-color: #4285F4;
           border: 3px solid white;
           border-radius: 50%;
           box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         "></div>`,
-        anchor: new naver.maps.Point(10, 10),
+        anchor: new naver.maps.Point(2, 2),
       },
       title: "내 위치",
     });
@@ -190,23 +277,37 @@ export default function NearbyClient() {
         store.longitude
       );
 
-      // 커스텀 마커
+      // 브랜드별 로고 이미지 경로
+      const brandLogos: Record<BrandType, string> = {
+        GS25: "/brands/gs25.webp",
+        CU: "/brands/cu.svg",
+        SevenEleven: "/brands/seveneleven.png",
+        Emart24: "/brands/emart24.webp",
+      };
+
+      // 커스텀 마커 (로고 이미지)
       const marker = new naver.maps.Marker({
         position: markerPosition,
-        map: mapInstance,
+        map: map,
         icon: {
           content: `<div style="
-            background-color: ${BRAND_COLORS[store.brand]};
-            color: white;
-            padding: 6px 10px;
-            border-radius: 16px;
-            font-weight: bold;
-            font-size: 11px;
-            white-space: nowrap;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            border: 2px solid white;
-          ">${BRAND_LABELS[store.brand]}</div>`,
-          anchor: new naver.maps.Point(30, 30),
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            border: 3px solid ${BRAND_COLORS[store.brand]};
+            overflow: hidden;
+            padding: 2px;
+          ">
+            <img src="${brandLogos[store.brand]}" alt="${
+            BRAND_LABELS[store.brand]
+          }" style="width: 100%; height: 100%; object-fit: contain;" />
+          </div>`,
+          anchor: new naver.maps.Point(20, 20),
         },
         title: store.name,
       });
@@ -227,7 +328,8 @@ export default function NearbyClient() {
     });
 
     setMarkers(newMarkers);
-  }, [userLocation, stores, radius]); // map, markers 의존성 제거
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, userLocation, stores]); // markers 제거 - 무한 루프 방지
 
   // 거리 포맷팅
   const formatDistance = (distance: number) => {
@@ -239,22 +341,35 @@ export default function NearbyClient() {
 
   // 길찾기 (네이버 지도)
   const handleNavigation = (store: Store) => {
-    const naverUrl = `https://map.naver.com/v5/directions/-/-/-/transit?c=${store.longitude},${store.latitude},15,0,0,0,dh`;
-    window.open(naverUrl, "_blank");
+    if (!userLocation) {
+      toast.error("현재 위치를 가져올 수 없습니다");
+      return;
+    }
+
+    // 네이버 지도 앱 딥링크 (모바일) 또는 웹 URL
+    // 도착지만 지정하고 출발지는 사용자가 직접 설정하도록
+    const naverUrl = `nmap://place?lat=${store.latitude}&lng=${
+      store.longitude
+    }&name=${encodeURIComponent(store.name)}&appname=com.convpromo`;
+
+    // 웹 URL (앱이 없을 경우 대체)
+    const webUrl = `https://map.naver.com/v5/search/${encodeURIComponent(
+      store.name + " " + store.address
+    )}`;
+
+    console.log("🗺️ Navigation URL:", webUrl);
+
+    // 모바일에서는 딥링크 시도, 실패하면 웹 URL
+    window.location.href = naverUrl;
+    setTimeout(() => {
+      window.open(webUrl, "_blank");
+    }, 500);
   };
 
   // 브랜드 프로모션 페이지로 이동
   const handleStoreClick = (brand: BrandType) => {
     router.push(`/?brand=${brand}`);
   };
-
-  if (loading && !stores.length) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loading />
-      </div>
-    );
-  }
 
   if (locationError) {
     return (
@@ -283,7 +398,9 @@ export default function NearbyClient() {
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <MapPin className="w-8 h-8 text-red-500" />
           </div>
-          <p className="text-gray-700 mb-2 font-medium">위치 권한이 필요합니다</p>
+          <p className="text-gray-700 mb-2 font-medium">
+            위치 권한이 필요합니다
+          </p>
           <p className="text-gray-500 text-sm mb-6">{locationError}</p>
           <button
             onClick={() => window.location.reload()}
@@ -331,9 +448,7 @@ export default function NearbyClient() {
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
-                  {brand === "ALL"
-                    ? "전체"
-                    : BRAND_LABELS[brand as BrandType]}
+                  {brand === "ALL" ? "전체" : BRAND_LABELS[brand as BrandType]}
                 </button>
               ))}
             </div>
@@ -358,9 +473,55 @@ export default function NearbyClient() {
         </div>
       </header>
 
-      <main className="pb-16">
+      <main className="pb-16 relative z-0">
         {/* 지도 */}
-        <div id="map" className="w-full h-64 bg-gray-100"></div>
+        <div className="relative">
+          <div
+            id="map"
+            className="w-full h-64 bg-gray-100"
+            style={{ zIndex: 0 }}
+          ></div>
+
+          {/* 현재 위치로 이동 버튼 (네이버 지도 스타일) */}
+          <button
+            onClick={moveToCurrentLocation}
+            className="absolute top-3 left-3 w-9 h-9 bg-white rounded-lg shadow-md flex items-center justify-center hover:bg-blue-50 hover:shadow-lg active:scale-95 transition-all duration-200 border border-gray-200 z-10 group"
+            title="현재 위치로 이동"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="group-hover:scale-110 transition-transform duration-200"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+                fill="#4285F4"
+                className="group-hover:fill-blue-600 transition-colors"
+              />
+              <circle
+                cx="12"
+                cy="12"
+                r="8"
+                stroke="#4285F4"
+                strokeWidth="2"
+                fill="none"
+                className="group-hover:stroke-blue-600 transition-colors"
+              />
+              <path
+                d="M12 2 L12 6 M12 18 L12 22 M2 12 L6 12 M18 12 L22 12"
+                stroke="#4285F4"
+                strokeWidth="2"
+                strokeLinecap="round"
+                className="group-hover:stroke-blue-600 transition-colors"
+              />
+            </svg>
+          </button>
+        </div>
 
         {/* 편의점 리스트 */}
         <div className="px-3 py-3">
