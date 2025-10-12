@@ -24,33 +24,30 @@ export default function NearbyClient() {
   const [selectedBrand, setSelectedBrand] = useState<BrandType | "ALL">("ALL");
   const [radius, setRadius] = useState<number>(1000); // 기본 1km
   const [locationError, setLocationError] = useState<string>("");
-  const [map, setMap] = useState<kakao.maps.Map | null>(null);
-  const [markers, setMarkers] = useState<kakao.maps.Marker[]>([]);
+  const [map, setMap] = useState<naver.maps.Map | null>(null);
+  const [markers, setMarkers] = useState<naver.maps.Marker[]>([]);
 
-  // 카카오맵 SDK 로드
+  // 네이버 지도 SDK 로드
   useEffect(() => {
-    const mapKey = process.env.NEXT_PUBLIC_KAKAO_MAP_KEY;
-    console.log("🗺️ Loading Kakao Maps with key:", mapKey?.substring(0, 10) + "...");
+    const clientId = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
+    console.log("🗺️ Loading Naver Maps with Client ID:", clientId?.substring(0, 10) + "...");
 
     const script = document.createElement("script");
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${mapKey}&autoload=false`;
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${clientId}`;
     script.async = true;
-    script.charset = "utf-8";
     document.head.appendChild(script);
 
     script.onload = () => {
-      console.log("✅ Kakao Maps script loaded");
-      if (window.kakao && window.kakao.maps) {
-        kakao.maps.load(() => {
-          console.log("✅ Kakao Maps SDK initialized");
-        });
+      console.log("✅ Naver Maps SDK loaded");
+      if (window.naver && window.naver.maps) {
+        console.log("✅ Naver Maps available");
       } else {
-        console.error("❌ kakao.maps not available");
+        console.error("❌ naver.maps not available");
       }
     };
 
     script.onerror = (error) => {
-      console.error("❌ Failed to load Kakao Maps script:", error);
+      console.error("❌ Failed to load Naver Maps script:", error);
     };
 
     return () => {
@@ -127,9 +124,9 @@ export default function NearbyClient() {
     }
   }, [userLocation, radius, selectedBrand, fetchNearbyStores]);
 
-  // 지도 초기화 및 업데이트
+  // 네이버 지도 초기화 및 업데이트
   useEffect(() => {
-    if (!userLocation || !window.kakao || !stores.length) return;
+    if (!userLocation || !window.naver || !stores.length) return;
 
     // 지도 컨테이너
     const container = document.getElementById("map");
@@ -137,77 +134,85 @@ export default function NearbyClient() {
 
     // 지도 옵션
     const options = {
-      center: new kakao.maps.LatLng(
+      center: new naver.maps.LatLng(
         userLocation.latitude,
         userLocation.longitude
       ),
-      level: radius === 500 ? 4 : radius === 1000 ? 5 : 6, // 반경에 따라 줌 레벨 조정
+      zoom: radius === 500 ? 16 : radius === 1000 ? 15 : 14,
+      zoomControl: true,
+      zoomControlOptions: {
+        position: naver.maps.Position.TOP_RIGHT,
+      },
     };
 
     // 지도 생성 또는 업데이트
     let mapInstance = map;
     if (!mapInstance) {
-      mapInstance = new kakao.maps.Map(container, options);
+      mapInstance = new naver.maps.Map(container, options);
       setMap(mapInstance);
     } else {
-      mapInstance.setCenter(options.center);
-      mapInstance.setLevel(options.level);
+      mapInstance.setCenter(
+        new naver.maps.LatLng(userLocation.latitude, userLocation.longitude)
+      );
+      mapInstance.setZoom(options.zoom);
     }
 
     // 기존 마커 제거
     markers.forEach((marker) => marker.setMap(null));
 
     // 내 위치 마커
-    const myMarker = new kakao.maps.Marker({
-      position: new kakao.maps.LatLng(
+    const myMarker = new naver.maps.Marker({
+      position: new naver.maps.LatLng(
         userLocation.latitude,
         userLocation.longitude
       ),
       map: mapInstance,
+      icon: {
+        content: `<div style="
+          width: 20px;
+          height: 20px;
+          background-color: #4285F4;
+          border: 3px solid white;
+          border-radius: 50%;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        "></div>`,
+        anchor: new naver.maps.Point(10, 10),
+      },
+      title: "내 위치",
     });
 
     // 편의점 마커 생성
-    const newMarkers: kakao.maps.Marker[] = [myMarker];
+    const newMarkers: naver.maps.Marker[] = [myMarker];
 
     stores.forEach((store) => {
-      const markerPosition = new kakao.maps.LatLng(
+      const markerPosition = new naver.maps.LatLng(
         store.latitude,
         store.longitude
       );
 
-      // 커스텀 마커 HTML
-      const markerContent = `
-        <div style="
-          background-color: ${BRAND_COLORS[store.brand]};
-          color: white;
-          padding: 8px 12px;
-          border-radius: 20px;
-          font-weight: bold;
-          font-size: 12px;
-          white-space: nowrap;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        ">
-          ${BRAND_LABELS[store.brand]}
-        </div>
-      `;
-
-      const customOverlay = new kakao.maps.CustomOverlay({
-        position: markerPosition,
-        content: markerContent,
-        yAnchor: 1,
-      });
-
-      customOverlay.setMap(mapInstance);
-
-      // 클릭 이벤트
-      const marker = new kakao.maps.Marker({
+      // 커스텀 마커
+      const marker = new naver.maps.Marker({
         position: markerPosition,
         map: mapInstance,
-        clickable: true,
+        icon: {
+          content: `<div style="
+            background-color: ${BRAND_COLORS[store.brand]};
+            color: white;
+            padding: 6px 10px;
+            border-radius: 16px;
+            font-weight: bold;
+            font-size: 11px;
+            white-space: nowrap;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border: 2px solid white;
+          ">${BRAND_LABELS[store.brand]}</div>`,
+          anchor: new naver.maps.Point(30, 30),
+        },
+        title: store.name,
       });
 
-      kakao.maps.event.addListener(marker, "click", () => {
-        // 해당 매장으로 스크롤
+      // 마커 클릭 이벤트
+      naver.maps.Event.addListener(marker, "click", () => {
         const element = document.getElementById(`store-${store.id}`);
         if (element) {
           element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -232,14 +237,14 @@ export default function NearbyClient() {
     return `${(distance / 1000).toFixed(1)}km`;
   };
 
-  // 길찾기 (카카오맵 or 네이버지도)
+  // 길찾기 (네이버 지도)
   const handleNavigation = (store: Store) => {
-    const kakaoUrl = `https://map.kakao.com/link/to/${store.name},${store.latitude},${store.longitude}`;
-    window.open(kakaoUrl, "_blank");
+    const naverUrl = `https://map.naver.com/v5/directions/-/-/-/transit?c=${store.longitude},${store.latitude},15,0,0,0,dh`;
+    window.open(naverUrl, "_blank");
   };
 
   // 브랜드 프로모션 페이지로 이동
-  const handleStoreCli = (brand: BrandType) => {
+  const handleStoreClick = (brand: BrandType) => {
     router.push(`/?brand=${brand}`);
   };
 
@@ -401,7 +406,7 @@ export default function NearbyClient() {
                         <Navigation className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={() => handleStoreCli(store.brand)}
+                        onClick={() => handleStoreClick(store.brand)}
                         className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                         title="프로모션 보기"
                       >
