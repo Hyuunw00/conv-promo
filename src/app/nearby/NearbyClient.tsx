@@ -29,19 +29,34 @@ export default function NearbyClient() {
 
   // 카카오맵 SDK 로드
   useEffect(() => {
+    const mapKey = process.env.NEXT_PUBLIC_KAKAO_MAP_KEY;
+    console.log("🗺️ Loading Kakao Maps with key:", mapKey?.substring(0, 10) + "...");
+
     const script = document.createElement("script");
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${mapKey}&autoload=false`;
     script.async = true;
+    script.charset = "utf-8";
     document.head.appendChild(script);
 
     script.onload = () => {
-      kakao.maps.load(() => {
-        console.log("Kakao Maps SDK loaded");
-      });
+      console.log("✅ Kakao Maps script loaded");
+      if (window.kakao && window.kakao.maps) {
+        kakao.maps.load(() => {
+          console.log("✅ Kakao Maps SDK initialized");
+        });
+      } else {
+        console.error("❌ kakao.maps not available");
+      }
+    };
+
+    script.onerror = (error) => {
+      console.error("❌ Failed to load Kakao Maps script:", error);
     };
 
     return () => {
-      document.head.removeChild(script);
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
     };
   }, []);
 
@@ -74,17 +89,31 @@ export default function NearbyClient() {
     if (!userLocation) return;
 
     setLoading(true);
+    console.log("🔍 Fetching nearby stores:", {
+      latitude: userLocation.latitude,
+      longitude: userLocation.longitude,
+      radius,
+      brand: selectedBrand,
+    });
+
     try {
       const response = await fetch(
         `/api/nearby/stores?latitude=${userLocation.latitude}&longitude=${userLocation.longitude}&radius=${radius}&brand=${selectedBrand}`
       );
 
-      if (!response.ok) throw new Error("Failed to fetch stores");
+      console.log("📡 API Response status:", response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("❌ API Error:", errorData);
+        throw new Error("Failed to fetch stores");
+      }
 
       const data = await response.json();
+      console.log("✅ Stores found:", data.stores?.length || 0, data);
       setStores(data.stores || []);
     } catch (error) {
-      console.error("Fetch stores error:", error);
+      console.error("❌ Fetch stores error:", error);
       toast.error("주변 편의점을 불러오는데 실패했습니다");
     } finally {
       setLoading(false);
