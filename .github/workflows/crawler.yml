@@ -161,19 +161,19 @@ jobs:
       - name: Send webhook notification
         if: always() && steps.parse-results.outputs.total_new > 0
         env:
-          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          BASE_URL: ${{ secrets.BASE_URL }}
           WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
           RESULTS: ${{ steps.parse-results.outputs.results }}
         run: |
           echo "=== Sending Webhook ==="
           echo "Total new: ${{ steps.parse-results.outputs.total_new }}"
 
-          if [ -z "$WEBHOOK_URL" ] || [ -z "$WEBHOOK_SECRET" ]; then
-            echo "⚠️ WEBHOOK_URL or WEBHOOK_SECRET not set, skipping notification"
+          if [ -z "$BASE_URL" ] || [ -z "$WEBHOOK_SECRET" ]; then
+            echo "⚠️ BASE_URL or WEBHOOK_SECRET not set, skipping notification"
             exit 0
           fi
 
-          curl -X POST "$WEBHOOK_URL" \
+          curl -X POST "$BASE_URL/api/webhooks/crawler" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $WEBHOOK_SECRET" \
             -d "{\"results\": $RESULTS}" \

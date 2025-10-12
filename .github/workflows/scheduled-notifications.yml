@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 5
 
     env:
-      WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+      BASE_URL: ${{ secrets.BASE_URL }}
       WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
 
     steps:
@@ -28,14 +28,14 @@ jobs:
           echo "Event: ${{ github.event_name }}"
           echo "Date: $(date)"
 
-          if [ -z "$WEBHOOK_URL" ] || [ -z "$WEBHOOK_SECRET" ]; then
-            echo "❌ WEBHOOK_URL or WEBHOOK_SECRET not configured"
+          if [ -z "$BASE_URL" ] || [ -z "$WEBHOOK_SECRET" ]; then
+            echo "❌ BASE_URL or WEBHOOK_SECRET not configured"
             exit 1
           fi
 
           # API 호출 (이벤트 타입 전달)
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            "$WEBHOOK_URL/api/notifications/scheduled" \
+            "$BASE_URL/api/notifications/scheduled" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $WEBHOOK_SECRET" \
             -d "{\"trigger\": \"${{ github.event_name }}\"}")
