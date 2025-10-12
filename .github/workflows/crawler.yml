@@ -3,7 +3,7 @@ name: Weekly Crawler
 on:
   schedule:
     # 매주 월요일 새벽 2시 (KST) = 일요일 17시 (UTC)
-    - cron: '0 17 * * 0'
+    - cron: "0 17 * * 0"
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
@@ -25,8 +25,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          cache: 'pip'
+          python-version: "3.12"
+          cache: "pip"
           cache-dependency-path: crawler/requirements.txt
 
       - name: Install Chrome and ChromeDriver
@@ -113,16 +113,42 @@ jobs:
         run: |
           echo "=== Parsing Crawler Results ==="
 
-          # 로그 파일에서 결과 파싱 (CRAWLER_RESULTS=... 라인 찾기)
-          RESULTS_JSON=""
+          # 로그 파일에서 각 크롤러 결과 찾기
+          CU_RESULT='{}'
+          SEVEN_RESULT='{}'
+          GS25_RESULT='{}'
+          EMART_RESULT='{}'
+
           if [ -f crawler/logs/upload_to_db.log ]; then
-            RESULTS_JSON=$(grep "CRAWLER_RESULTS=" crawler/logs/upload_to_db.log | tail -1 | sed 's/CRAWLER_RESULTS=//')
+            # 각 브랜드별 CRAWLER_RESULTS 추출
+            CU_LINE=$(grep 'CRAWLER_RESULTS={"CU"' crawler/logs/upload_to_db.log | tail -1)
+            if [ ! -z "$CU_LINE" ]; then
+              CU_RESULT=$(echo "$CU_LINE" | sed 's/CRAWLER_RESULTS=//' | jq -r '.CU')
+            fi
+
+            SEVEN_LINE=$(grep 'CRAWLER_RESULTS={"SevenEleven"' crawler/logs/upload_to_db.log | tail -1)
+            if [ ! -z "$SEVEN_LINE" ]; then
+              SEVEN_RESULT=$(echo "$SEVEN_LINE" | sed 's/CRAWLER_RESULTS=//' | jq -r '.SevenEleven')
+            fi
+
+            GS25_LINE=$(grep 'CRAWLER_RESULTS={"GS25"' crawler/logs/upload_to_db.log | tail -1)
+            if [ ! -z "$GS25_LINE" ]; then
+              GS25_RESULT=$(echo "$GS25_LINE" | sed 's/CRAWLER_RESULTS=//' | jq -r '.GS25')
+            fi
+
+            EMART_LINE=$(grep 'CRAWLER_RESULTS={"Emart24"' crawler/logs/upload_to_db.log | tail -1)
+            if [ ! -z "$EMART_LINE" ]; then
+              EMART_RESULT=$(echo "$EMART_LINE" | sed 's/CRAWLER_RESULTS=//' | jq -r '.Emart24')
+            fi
           fi
 
-          # 결과가 없으면 빈 객체
-          if [ -z "$RESULTS_JSON" ]; then
-            RESULTS_JSON='{}'
-          fi
+          # 통합 결과 생성
+          RESULTS_JSON=$(jq -n \
+            --argjson cu "$CU_RESULT" \
+            --argjson seven "$SEVEN_RESULT" \
+            --argjson gs25 "$GS25_RESULT" \
+            --argjson emart "$EMART_RESULT" \
+            '{CU: $cu, SevenEleven: $seven, GS25: $gs25, Emart24: $emart}')
 
           echo "results=$RESULTS_JSON" >> $GITHUB_OUTPUT
           echo "Results: $RESULTS_JSON"

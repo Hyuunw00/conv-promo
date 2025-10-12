@@ -52,6 +52,9 @@ def upload_cu():
         logger.info(f"  신규: {stats['new']}개, 업데이트: {stats['updated']}개, 삭제: {stats['deleted']}개")
         logger.info("=" * 60)
 
+        # GitHub Actions 파싱용 JSON 출력
+        print(f"CRAWLER_RESULTS={json.dumps({'CU': stats})}")
+
         return stats
 
     except Exception as e:
@@ -89,6 +92,9 @@ def upload_seven():
         logger.info(f"✓ 세븐일레븐 업로드 완료")
         logger.info(f"  신규: {stats['new']}개, 업데이트: {stats['updated']}개, 삭제: {stats['deleted']}개")
         logger.info("=" * 60)
+
+        # GitHub Actions 파싱용 JSON 출력
+        print(f"CRAWLER_RESULTS={json.dumps({'SevenEleven': stats})}")
 
         return stats
 
@@ -128,6 +134,9 @@ def upload_gs25():
         logger.info(f"  신규: {stats['new']}개, 업데이트: {stats['updated']}개, 삭제: {stats['deleted']}개")
         logger.info("=" * 60)
 
+        # GitHub Actions 파싱용 JSON 출력
+        print(f"CRAWLER_RESULTS={json.dumps({'GS25': stats})}")
+
         return stats
 
     except Exception as e:
@@ -165,6 +174,9 @@ def upload_emart24():
         logger.info(f"✓ 이마트24 업로드 완료")
         logger.info(f"  신규: {stats['new']}개, 업데이트: {stats['updated']}개, 삭제: {stats['deleted']}개")
         logger.info("=" * 60)
+
+        # GitHub Actions 파싱용 JSON 출력
+        print(f"CRAWLER_RESULTS={json.dumps({'Emart24': stats})}")
 
         return stats
 
