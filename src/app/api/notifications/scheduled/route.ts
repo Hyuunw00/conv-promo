@@ -141,11 +141,16 @@ export async function POST(request: Request) {
             payload
           );
           return { success: true };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error("Send error:", error);
 
           // 410 Gone: 구독 만료 -> DB에서 삭제
-          if (error?.statusCode === 410) {
+          if (
+            error &&
+            typeof error === "object" &&
+            "statusCode" in error &&
+            error.statusCode === 410
+          ) {
             await supabase
               .from("push_subscriptions")
               .delete()
