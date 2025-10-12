@@ -107,6 +107,55 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
+      - name: Parse crawler results
+        id: parse-results
+        if: always()
+        run: |
+          echo "=== Parsing Crawler Results ==="
+
+          # 로그 파일에서 결과 파싱 (CRAWLER_RESULTS=... 라인 찾기)
+          RESULTS_JSON=""
+          if [ -f crawler/logs/upload_to_db.log ]; then
+            RESULTS_JSON=$(grep "CRAWLER_RESULTS=" crawler/logs/upload_to_db.log | tail -1 | sed 's/CRAWLER_RESULTS=//')
+          fi
+
+          # 결과가 없으면 빈 객체
+          if [ -z "$RESULTS_JSON" ]; then
+            RESULTS_JSON='{}'
+          fi
+
+          echo "results=$RESULTS_JSON" >> $GITHUB_OUTPUT
+          echo "Results: $RESULTS_JSON"
+
+          # 신규 프로모션 개수 계산
+          TOTAL_NEW=$(echo "$RESULTS_JSON" | jq '[.CU.new, .SevenEleven.new, .GS25.new, .Emart24.new] | map(select(. != null)) | add // 0')
+          echo "total_new=$TOTAL_NEW" >> $GITHUB_OUTPUT
+          echo "Total new promotions: $TOTAL_NEW"
+
+      - name: Send webhook notification
+        if: always() && steps.parse-results.outputs.total_new > 0
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+          RESULTS: ${{ steps.parse-results.outputs.results }}
+        run: |
+          echo "=== Sending Webhook ==="
+          echo "Total new: ${{ steps.parse-results.outputs.total_new }}"
+
+          if [ -z "$WEBHOOK_URL" ] || [ -z "$WEBHOOK_SECRET" ]; then
+            echo "⚠️ WEBHOOK_URL or WEBHOOK_SECRET not set, skipping notification"
+            exit 0
+          fi
+
+          curl -X POST "$WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $WEBHOOK_SECRET" \
+            -d "{\"results\": $RESULTS}" \
+            --fail \
+            || echo "⚠️ Webhook failed, but continuing..."
+
+          echo "✅ Webhook sent successfully"
+
       - name: Check results
         if: always()
         run: |
@@ -115,6 +164,7 @@ jobs:
           echo "SevenEleven: ${{ steps.seven-crawler.outcome }}"
           echo "GS25: ${{ steps.gs25-crawler.outcome }}"
           echo "Emart24: ${{ steps.emart24-crawler.outcome }}"
+          echo "New promotions: ${{ steps.parse-results.outputs.total_new }}"
 
           FAILED=0
           if [ "${{ steps.cu-crawler.outcome }}" == "failure" ]; then

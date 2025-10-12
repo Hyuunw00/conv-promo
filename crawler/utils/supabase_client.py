@@ -61,6 +61,167 @@ class SupabaseClient:
             logger.error(f"Failed to delete promotions: {e}")
             raise
 
+    def make_promotion_key(self, promo: Dict[str, Any]) -> str:
+        """
+        프로모션 고유 키 생성 (중복 확인용)
+
+        Args:
+            promo: 프로모션 데이터
+
+        Returns:
+            고유 키 (title + barcode or title + price)
+        """
+        title = promo.get('title', '')
+        barcode = promo.get('barcode', '')
+        price = promo.get('sale_price', 0)
+
+        # 바코드가 있으면 title+barcode, 없으면 title+price
+        if barcode:
+            return f"{title}_{barcode}"
+        else:
+            return f"{title}_{price}"
+
+    def get_existing_promotions(self, brand_id: str, start_date: str) -> List[Dict[str, Any]]:
+        """
+        기존 프로모션 조회
+
+        Args:
+            brand_id: 브랜드 UUID
+            start_date: 시작일
+
+        Returns:
+            기존 프로모션 리스트
+        """
+        try:
+            response = self.client.table('promo').select('*').eq('brand_id', brand_id).eq('start_date', start_date).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            logger.error(f"Failed to get existing promotions: {e}")
+            return []
+
+    def save_promotions_with_diff(self, brand_name: str, promotions: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        변경사항 감지 후 프로모션 저장
+
+        Args:
+            brand_name: 브랜드명
+            promotions: 크롤링한 프로모션 리스트
+
+        Returns:
+            {
+                'new': 10,        # 신규 추가
+                'updated': 5,     # 업데이트
+                'deleted': 3,     # 삭제됨
+                'unchanged': 82,  # 변경 없음
+                'total': 100      # 총 저장된 개수
+            }
+        """
+        if not promotions:
+            logger.warning(f"No promotions to save for {brand_name}")
+            return {'new': 0, 'updated': 0, 'deleted': 0, 'unchanged': 0, 'total': 0}
+
+        try:
+            # 브랜드 ID 조회
+            brand_id = self.get_brand_id(brand_name)
+            start_date = promotions[0].get('start_date')
+
+            # 기존 데이터 조회
+            existing_promos = self.get_existing_promotions(brand_id, start_date)
+
+            # 고유 키로 매핑
+            existing_map = {self.make_promotion_key(p): p for p in existing_promos}
+            new_map = {self.make_promotion_key(p): p for p in promotions}
+
+            # 비교
+            existing_keys = set(existing_map.keys())
+            new_keys = set(new_map.keys())
+
+            added_keys = new_keys - existing_keys      # 신규
+            deleted_keys = existing_keys - new_keys    # 삭제
+            common_keys = new_keys & existing_keys     # 공통
+
+            # 통계
+            stats = {
+                'new': len(added_keys),
+                'deleted': len(deleted_keys),
+                'updated': 0,
+                'unchanged': 0,
+                'total': 0
+            }
+
+            # 1. 삭제된 프로모션 제거
+            if deleted_keys:
+                deleted_ids = [existing_map[key]['id'] for key in deleted_keys]
+                for promo_id in deleted_ids:
+                    self.client.table('promo').delete().eq('id', promo_id).execute()
+                logger.info(f"Deleted {len(deleted_ids)} promotions")
+
+            # 2. 신규 프로모션 추가
+            new_promos = []
+            for key in added_keys:
+                promo = new_map[key]
+                promo_data = {
+                    'brand_id': brand_id,
+                    'title': promo.get('title'),
+                    'raw_title': promo.get('raw_title'),
+                    'barcode': promo.get('barcode'),
+                    'category': promo.get('category'),
+                    'deal_type': promo.get('deal_type'),
+                    'normal_price': promo.get('normal_price'),
+                    'sale_price': promo.get('sale_price'),
+                    'start_date': promo.get('start_date'),
+                    'end_date': promo.get('end_date'),
+                    'image_url': promo.get('image_url'),
+                    'source_url': promo.get('source_url'),
+                    'description': promo.get('description'),
+                }
+                new_promos.append(promo_data)
+
+            if new_promos:
+                batch_size = 100
+                for i in range(0, len(new_promos), batch_size):
+                    batch = new_promos[i:i + batch_size]
+                    self.client.table('promo').insert(batch).execute()
+                logger.info(f"Inserted {len(new_promos)} new promotions")
+
+            # 3. 기존 프로모션 업데이트 확인 (가격/이미지 변경)
+            updated_count = 0
+            for key in common_keys:
+                existing = existing_map[key]
+                new = new_map[key]
+
+                # 변경 사항 확인
+                changed = False
+                update_data = {}
+
+                if existing.get('sale_price') != new.get('sale_price'):
+                    update_data['sale_price'] = new.get('sale_price')
+                    changed = True
+
+                if existing.get('normal_price') != new.get('normal_price'):
+                    update_data['normal_price'] = new.get('normal_price')
+                    changed = True
+
+                if existing.get('image_url') != new.get('image_url'):
+                    update_data['image_url'] = new.get('image_url')
+                    changed = True
+
+                if changed:
+                    self.client.table('promo').update(update_data).eq('id', existing['id']).execute()
+                    updated_count += 1
+
+            stats['updated'] = updated_count
+            stats['unchanged'] = len(common_keys) - updated_count
+            stats['total'] = len(new_keys)
+
+            logger.info(f"Save complete - New: {stats['new']}, Updated: {stats['updated']}, Deleted: {stats['deleted']}, Unchanged: {stats['unchanged']}")
+
+            return stats
+
+        except Exception as e:
+            logger.error(f"Failed to save promotions with diff for {brand_name}: {e}")
+            raise
+
     def save_promotions(self, brand_name: str, promotions: List[Dict[str, Any]]) -> int:
         """
         프로모션 데이터 저장

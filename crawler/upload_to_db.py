@@ -42,16 +42,17 @@ def upload_cu():
             json.dump(products, f, ensure_ascii=False, indent=2)
         logger.info(f"✓ JSON 저장 완료")
 
-        # 3. DB 저장
+        # 3. DB 저장 (변경사항 감지)
         logger.info("Supabase에 저장 중...")
         client = SupabaseClient()
-        count = client.save_promotions("CU", products)
+        stats = client.save_promotions_with_diff("CU", products)
 
         logger.info("=" * 60)
-        logger.info(f"✓ CU 업로드 완료: {count}개 저장됨")
+        logger.info(f"✓ CU 업로드 완료")
+        logger.info(f"  신규: {stats['new']}개, 업데이트: {stats['updated']}개, 삭제: {stats['deleted']}개")
         logger.info("=" * 60)
 
-        return count
+        return stats
 
     except Exception as e:
         logger.error(f"✗ CU 업로드 실패: {e}")
@@ -79,16 +80,17 @@ def upload_seven():
             json.dump(products, f, ensure_ascii=False, indent=2)
         logger.info(f"✓ JSON 저장 완료")
 
-        # 3. DB 저장
+        # 3. DB 저장 (변경사항 감지)
         logger.info("Supabase에 저장 중...")
         client = SupabaseClient()
-        count = client.save_promotions("SevenEleven", products)
+        stats = client.save_promotions_with_diff("SevenEleven", products)
 
         logger.info("=" * 60)
-        logger.info(f"✓ 세븐일레븐 업로드 완료: {count}개 저장됨")
+        logger.info(f"✓ 세븐일레븐 업로드 완료")
+        logger.info(f"  신규: {stats['new']}개, 업데이트: {stats['updated']}개, 삭제: {stats['deleted']}개")
         logger.info("=" * 60)
 
-        return count
+        return stats
 
     except Exception as e:
         logger.error(f"✗ 세븐일레븐 업로드 실패: {e}")
@@ -116,16 +118,17 @@ def upload_gs25():
             json.dump(products, f, ensure_ascii=False, indent=2)
         logger.info(f"✓ JSON 저장 완료")
 
-        # 3. DB 저장
+        # 3. DB 저장 (변경사항 감지)
         logger.info("Supabase에 저장 중...")
         client = SupabaseClient()
-        count = client.save_promotions("GS25", products)
+        stats = client.save_promotions_with_diff("GS25", products)
 
         logger.info("=" * 60)
-        logger.info(f"✓ GS25 업로드 완료: {count}개 저장됨")
+        logger.info(f"✓ GS25 업로드 완료")
+        logger.info(f"  신규: {stats['new']}개, 업데이트: {stats['updated']}개, 삭제: {stats['deleted']}개")
         logger.info("=" * 60)
 
-        return count
+        return stats
 
     except Exception as e:
         logger.error(f"✗ GS25 업로드 실패: {e}")
@@ -153,16 +156,17 @@ def upload_emart24():
             json.dump(products, f, ensure_ascii=False, indent=2)
         logger.info(f"✓ JSON 저장 완료")
 
-        # 3. DB 저장
+        # 3. DB 저장 (변경사항 감지)
         logger.info("Supabase에 저장 중...")
         client = SupabaseClient()
-        count = client.save_promotions("Emart24", products)
+        stats = client.save_promotions_with_diff("Emart24", products)
 
         logger.info("=" * 60)
-        logger.info(f"✓ 이마트24 업로드 완료: {count}개 저장됨")
+        logger.info(f"✓ 이마트24 업로드 완료")
+        logger.info(f"  신규: {stats['new']}개, 업데이트: {stats['updated']}개, 삭제: {stats['deleted']}개")
         logger.info("=" * 60)
 
-        return count
+        return stats
 
     except Exception as e:
         logger.error(f"✗ 이마트24 업로드 실패: {e}")
@@ -174,35 +178,49 @@ def upload_all():
     logger.info("전체 편의점 데이터 업로드 시작")
     logger.info("=" * 60)
 
-    total_count = 0
+    total_stats = {'new': 0, 'updated': 0, 'deleted': 0, 'unchanged': 0}
+    results = {}
 
     try:
         # CU
-        cu_count = upload_cu()
-        total_count += cu_count
+        cu_stats = upload_cu()
+        results['CU'] = cu_stats
+        for key in total_stats:
+            total_stats[key] += cu_stats.get(key, 0)
         print()
 
         # 세븐일레븐
-        seven_count = upload_seven()
-        total_count += seven_count
+        seven_stats = upload_seven()
+        results['SevenEleven'] = seven_stats
+        for key in total_stats:
+            total_stats[key] += seven_stats.get(key, 0)
         print()
 
         # GS25
-        gs25_count = upload_gs25()
-        total_count += gs25_count
+        gs25_stats = upload_gs25()
+        results['GS25'] = gs25_stats
+        for key in total_stats:
+            total_stats[key] += gs25_stats.get(key, 0)
         print()
 
         # 이마트24
-        emart24_count = upload_emart24()
-        total_count += emart24_count
+        emart24_stats = upload_emart24()
+        results['Emart24'] = emart24_stats
+        for key in total_stats:
+            total_stats[key] += emart24_stats.get(key, 0)
 
         logger.info("=" * 60)
-        logger.info(f"✓ 전체 업로드 완료: 총 {total_count}개 저장됨")
-        logger.info(f"  - CU: {cu_count}개")
-        logger.info(f"  - 세븐일레븐: {seven_count}개")
-        logger.info(f"  - GS25: {gs25_count}개")
-        logger.info(f"  - 이마트24: {emart24_count}개")
+        logger.info(f"✓ 전체 업로드 완료")
+        logger.info(f"  총 신규: {total_stats['new']}개")
+        logger.info(f"  총 업데이트: {total_stats['updated']}개")
+        logger.info(f"  총 삭제: {total_stats['deleted']}개")
+        logger.info(f"  총 변경없음: {total_stats['unchanged']}개")
         logger.info("=" * 60)
+
+        # JSON 형식으로도 출력 (GitHub Actions에서 파싱용)
+        print(f"CRAWLER_RESULTS={json.dumps(results)}")
+
+        return results
 
     except Exception as e:
         logger.error(f"✗ 업로드 중 오류 발생: {e}")
