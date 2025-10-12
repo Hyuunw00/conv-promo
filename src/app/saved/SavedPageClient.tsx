@@ -206,6 +206,35 @@ export default function SavedPageClient({
     return true;
   });
 
+  // 예상 구매/절약 금액 계산
+  const calculatePrices = useCallback(() => {
+    let totalPurchase = 0; // 예상 구매 금액
+    let totalSavings = 0; // 예상 절약 금액
+
+    displayedPromos.forEach((promo) => {
+      const salePrice = promo.sale_price || 0;
+      const normalPrice = promo.normal_price || salePrice;
+
+      if (promo.deal_type === "ONE_PLUS_ONE") {
+        // 1+1: 1개 사면 1개 공짜
+        totalPurchase += salePrice * 1; // 1개 지불
+        totalSavings += salePrice * 1; // 1개 공짜
+      } else if (promo.deal_type === "TWO_PLUS_ONE") {
+        // 2+1: 2개 사야 1개 공짜
+        totalPurchase += salePrice * 2; // 2개 지불
+        totalSavings += salePrice * 1; // 1개 공짜
+      } else {
+        // 할인: 정가 - 할인가
+        totalPurchase += salePrice;
+        totalSavings += normalPrice - salePrice;
+      }
+    });
+
+    return { totalPurchase, totalSavings };
+  }, [displayedPromos]);
+
+  const { totalPurchase, totalSavings } = calculatePrices();
+
   // 활성 필터 개수
   const activeFilterCount = [
     selectedBrand !== "ALL",
@@ -352,17 +381,76 @@ export default function SavedPageClient({
       <main className="px-3 pb-16 pt-3">
         {displayedPromos.length > 0 ? (
           <>
+            {/* 가격 정보 카드 */}
+            {!isEditMode && (
+              <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    💰 예상 금액
+                  </h3>
+                  <span className="text-xs text-gray-500">
+                    {displayedPromos.length}개 상품
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">예상 구매 금액</span>
+                    <span className="text-base font-bold text-gray-900">
+                      {totalPurchase.toLocaleString()}원
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-blue-200">
+                    <span className="text-sm text-blue-700 font-medium">
+                      예상 절약 금액
+                    </span>
+                    <span className="text-lg font-bold text-blue-600">
+                      {totalSavings.toLocaleString()}원
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-3">
               {displayedPromos.map((promo) => (
-                <div key={promo.id} className="relative">
+                <div
+                  key={promo.id}
+                  className={`relative ${
+                    isEditMode && selectedPromoIds.has(promo.id)
+                      ? "ring-2 ring-blue-500 rounded-xl"
+                      : ""
+                  }`}
+                  onClick={
+                    isEditMode
+                      ? () => handleCheckboxToggle(promo.id)
+                      : undefined
+                  }
+                >
                   {isEditMode && (
-                    <div className="absolute top-3 left-3 z-10">
-                      <input
-                        type="checkbox"
-                        checked={selectedPromoIds.has(promo.id)}
-                        onChange={() => handleCheckboxToggle(promo.id)}
-                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                      />
+                    <div className="absolute top-3 left-3 z-10 pointer-events-none">
+                      <div
+                        className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                          selectedPromoIds.has(promo.id)
+                            ? "bg-blue-600 border-blue-600"
+                            : "bg-white border-gray-300"
+                        }`}
+                      >
+                        {selectedPromoIds.has(promo.id) && (
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={3}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                   )}
                   <PromoCardEnhanced
