@@ -6,12 +6,11 @@ import {
   MapPin,
   Navigation,
   ExternalLink,
-  Package,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Store, BrandType, BRAND_COLORS, BRAND_LABELS } from "@/types/store";
-import { getAppStoreUrl, getAppName, getDeepLink } from "@/constants/appLinks";
 import { toast } from "sonner";
 
 export default function NearbyClient() {
@@ -31,6 +30,10 @@ export default function NearbyClient() {
   const [locationError, setLocationError] = useState<string>("");
   const [map, setMap] = useState<naver.maps.Map | null>(null);
   const [markers, setMarkers] = useState<naver.maps.Marker[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
 
   // 네이버 지도 SDK 로드
   useEffect(() => {
@@ -355,18 +358,123 @@ export default function NearbyClient() {
     router.push(`/?brand=${brand}`);
   };
 
-  // 재고 확인 (앱스토어로 이동)
-  const handleStockCheck = (brand: BrandType) => {
-    const appName = getAppName(brand);
-    const appStoreUrl = getAppStoreUrl(brand);
+  // 검색 처리
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    // 간단한 confirm으로 처리 (추후 모달로 변경 가능)
-    const confirmed = window.confirm(
-      `${appName} 앱에서\n이 매장의 실시간 재고를 확인할 수 있습니다.\n\n앱스토어로 이동하시겠습니까?`
-    );
+    if (!searchQuery.trim()) {
+      toast.error("검색어를 입력해주세요");
+      return;
+    }
 
-    if (confirmed) {
-      window.open(appStoreUrl, "_blank");
+    setIsSearching(true);
+
+    try {
+      const response = await fetch(
+        `/api/nearby/geocode?query=${encodeURIComponent(searchQuery)}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to geocode");
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        // 지도 중심 이동
+        if (map) {
+          map.setCenter(
+            new naver.maps.LatLng(data.latitude, data.longitude)
+          );
+        }
+
+        // 지도 중심 업데이트 (자동으로 편의점 검색 실행됨)
+        setMapCenter({
+          latitude: data.latitude,
+          longitude: data.longitude,
+        });
+
+        toast.success(`${data.roadAddress || data.jibunAddress}로 이동`);
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+      toast.error("검색 결과를 찾을 수 없습니다");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // 검색어 초기화
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
+
+  // 디바운싱된 자동완성 검색
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/nearby/geocode?query=${encodeURIComponent(searchQuery)}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            // 검색 결과를 suggestions에 추가
+            const suggestion = data.roadAddress || data.jibunAddress;
+            setSuggestions([suggestion]);
+            setShowSuggestions(true);
+          } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+          }
+        }
+      } catch (error) {
+        console.error("Autocomplete error:", error);
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 500); // 500ms 디바운싱
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // 자동완성 선택
+  const handleSelectSuggestion = async (suggestion: string) => {
+    setSearchQuery(suggestion);
+    setShowSuggestions(false);
+
+    // 자동으로 검색 실행
+    try {
+      const response = await fetch(
+        `/api/nearby/geocode?query=${encodeURIComponent(suggestion)}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to geocode");
+      }
+
+      const data = await response.json();
+
+      if (data.success && map) {
+        map.setCenter(new naver.maps.LatLng(data.latitude, data.longitude));
+        setMapCenter({
+          latitude: data.latitude,
+          longitude: data.longitude,
+        });
+        toast.success(`${data.roadAddress || data.jibunAddress}로 이동`);
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+      toast.error("검색 결과를 찾을 수 없습니다");
     }
   };
 
@@ -432,6 +540,57 @@ export default function NearbyClient() {
               </p>
             </div>
           </div>
+
+          {/* 검색창 */}
+          <form onSubmit={handleSearch} className="mt-3">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setShowSuggestions(suggestions.length > 0)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                placeholder="지역/주소 검색 (예: 부산대, 강남역)"
+                className="w-full pl-3 pr-24 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isSearching}
+              />
+              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="p-1.5 text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  disabled={isSearching || !searchQuery.trim()}
+                  className="px-2.5 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isSearching ? "검색중" : "검색"}
+                </button>
+              </div>
+
+              {/* 자동완성 제안 */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => handleSelectSuggestion(suggestion)}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                    >
+                      <MapPin className="w-3 h-3 inline mr-2 text-gray-400" />
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </form>
 
           {/* 필터 */}
           <div className="mt-3 space-y-2">
@@ -571,13 +730,6 @@ export default function NearbyClient() {
                         title="프로모션 보기"
                       >
                         <ExternalLink className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleStockCheck(store.brand)}
-                        className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
-                        title="재고확인"
-                      >
-                        <Package className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
