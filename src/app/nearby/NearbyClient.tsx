@@ -28,10 +28,6 @@ export default function NearbyClient() {
   // 네이버 지도 SDK 로드
   useEffect(() => {
     const clientId = process.env.NEXT_PUBLIC_NCP_MAPS_CLIENT_ID;
-    console.log(
-      "🗺️ Loading Naver Maps with Client ID:",
-      clientId?.substring(0, 10) + "..."
-    );
 
     const script = document.createElement("script");
     script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${clientId}`;
@@ -88,17 +84,11 @@ export default function NearbyClient() {
     if (!mapCenter) return;
 
     setLoading(true);
-    console.log("🔍 Fetching nearby stores:", {
-      mapCenter: mapCenter,
-      brand: selectedBrand,
-    });
 
     try {
       const response = await fetch(
         `/api/nearby/stores?latitude=${mapCenter.latitude}&longitude=${mapCenter.longitude}&brand=${selectedBrand}`
       );
-
-      console.log("📡 API Response status:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -107,7 +97,6 @@ export default function NearbyClient() {
       }
 
       const data = await response.json();
-      console.log("✅ Stores found:", data.stores?.length || 0, data);
 
       // 거리를 사용자 실제 위치 기준으로 재계산
       const storesWithDistance = userLocation
@@ -149,10 +138,6 @@ export default function NearbyClient() {
         return distanceFromCenter <= radius;
       });
 
-      console.log(
-        `📍 Filtered stores: ${filteredStores.length} / ${storesWithDistance.length} (radius: ${radius}m)`
-      );
-
       setStores(filteredStores || []);
     } catch (error) {
       console.error("❌ Fetch stores error:", error);
@@ -193,8 +178,6 @@ export default function NearbyClient() {
       return;
     }
 
-    console.log("🗺️ Initializing Naver Map at", userLocation);
-
     // 지도 옵션
     const options = {
       center: new naver.maps.LatLng(
@@ -210,21 +193,17 @@ export default function NearbyClient() {
 
     const mapInstance = new naver.maps.Map(container, options);
     setMap(mapInstance);
-    console.log("✅ Naver Map created");
 
     // 지도 이동/줌 변경 이벤트 (디바운스)
     let timeoutId: NodeJS.Timeout;
     naver.maps.Event.addListener(mapInstance, "idle", () => {
-      console.log("🗺️ Map idle event triggered");
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        console.log("🗺️ Debounce completed, updating map center");
         const center = mapInstance.getCenter();
         const newCenter = {
           latitude: center.lat(),
           longitude: center.lng(),
         };
-        console.log("🗺️ New center:", newCenter);
         setMapCenter(newCenter);
       }, 1000); // 1000ms 디바운스
     });
@@ -356,8 +335,6 @@ export default function NearbyClient() {
     const webUrl = `https://map.naver.com/v5/search/${encodeURIComponent(
       store.name + " " + store.address
     )}`;
-
-    console.log("🗺️ Navigation URL:", webUrl);
 
     // 모바일에서는 딥링크 시도, 실패하면 웹 URL
     window.location.href = naverUrl;
