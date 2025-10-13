@@ -1,10 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, MapPin, Navigation, ExternalLink } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  Navigation,
+  ExternalLink,
+  Package,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Store, BrandType, BRAND_COLORS, BRAND_LABELS } from "@/types/store";
+import { getAppStoreUrl, getAppName, getDeepLink } from "@/constants/appLinks";
 import { toast } from "sonner";
 
 export default function NearbyClient() {
@@ -348,6 +355,21 @@ export default function NearbyClient() {
     router.push(`/?brand=${brand}`);
   };
 
+  // 재고 확인 (앱스토어로 이동)
+  const handleStockCheck = (brand: BrandType) => {
+    const appName = getAppName(brand);
+    const appStoreUrl = getAppStoreUrl(brand);
+
+    // 간단한 confirm으로 처리 (추후 모달로 변경 가능)
+    const confirmed = window.confirm(
+      `${appName} 앱에서\n이 매장의 실시간 재고를 확인할 수 있습니다.\n\n앱스토어로 이동하시겠습니까?`
+    );
+
+    if (confirmed) {
+      window.open(appStoreUrl, "_blank");
+    }
+  };
+
   if (locationError) {
     return (
       <>
@@ -549,6 +571,13 @@ export default function NearbyClient() {
                         title="프로모션 보기"
                       >
                         <ExternalLink className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleStockCheck(store.brand)}
+                        className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                        title="재고확인"
+                      >
+                        <Package className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
