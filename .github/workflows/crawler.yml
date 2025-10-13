@@ -142,8 +142,8 @@ jobs:
             fi
           fi
 
-          # 통합 결과 생성
-          RESULTS_JSON=$(jq -n \
+          # 통합 결과 생성 (compact JSON)
+          RESULTS_JSON=$(jq -n -c \
             --argjson cu "$CU_RESULT" \
             --argjson seven "$SEVEN_RESULT" \
             --argjson gs25 "$GS25_RESULT" \
