@@ -7,12 +7,18 @@ import { Promotion } from "@/types/promotion";
 import PromoCardEnhanced from "@/components/PromoCardEnhanced";
 import { usePromotionList } from "@/hooks/usePromotionList";
 import ScrollToTop from "@/components/ScrollToTop";
+import ComparisonView from "@/components/ComparisonView";
 
 export default function SearchModal() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
+  const [comparisonData, setComparisonData] = useState<{
+    comparison: Promotion[];
+    lowestPrice: number | null;
+  } | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const ITEMS_PER_PAGE = 20;
@@ -83,6 +89,7 @@ export default function SearchModal() {
     setIsSearching(true);
     setSearchSuggestions([]); // 검색 시 제안 목록 초기화
     setSearchQuery(query);
+    setShowComparison(false); // 새 검색 시 비교 뷰 닫기
 
     const supabase = createClient();
     const { data } = await supabase
@@ -96,6 +103,30 @@ export default function SearchModal() {
     setIsSearching(false);
   };
 
+  // 편의점별 비교
+  const handleCompare = async () => {
+    if (!searchQuery.trim()) return;
+
+    try {
+      const response = await fetch(
+        `/api/promotions/compare?query=${encodeURIComponent(searchQuery)}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch comparison");
+      }
+
+      const data = await response.json();
+      setComparisonData({
+        comparison: data.comparison,
+        lowestPrice: data.lowestPrice,
+      });
+      setShowComparison(true);
+    } catch (error) {
+      console.error("Comparison error:", error);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center">
       {/* 배경 오버레이 - 뒷배경이 보이도록 */}
@@ -105,13 +136,16 @@ export default function SearchModal() {
       />
 
       {/* 모달 콘텐츠 - 상단에 위치, 적절한 크기 */}
-      <div className="relative w-full max-w-md mt-20 mx-4 min-h-[500px] max-h-[70vh] bg-white rounded-2xl shadow-2xl overflow-hidden animate-slide-down flex flex-col">
+      <div className="relative w-full max-w-md mt-1 mx-4 min-h-[500px] max-h-[70vh] bg-white rounded-2xl shadow-2xl overflow-hidden animate-slide-down flex flex-col">
         {/* 검색 헤더 */}
-        <div className="sticky top-0  bg-white border-b">
+        <div className="sticky top-0 bg-white border-b border-gray-200">
           <div className="flex items-center gap-3 p-4">
-            <button onClick={handleClose} className="p-1">
+            <button
+              onClick={handleClose}
+              className="p-2 -m-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -120,7 +154,7 @@ export default function SearchModal() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
                 />
               </svg>
             </button>
@@ -133,8 +167,8 @@ export default function SearchModal() {
                 onKeyDown={(e) =>
                   e.key === "Enter" && handleSearch(searchQuery)
                 }
-                placeholder="상품명, 브랜드, 카테고리 검색"
-                className="w-full px-4 py-2 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="상품명, 브랜드 검색"
+                className="w-full px-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
               />
 
@@ -145,10 +179,10 @@ export default function SearchModal() {
                     setSearchSuggestions([]);
                     resetData([]);
                   }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full"
                 >
                   <svg
-                    className="w-5 h-5 text-gray-400"
+                    className="w-4 h-4 text-gray-500"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -166,75 +200,45 @@ export default function SearchModal() {
 
             <button
               onClick={() => handleSearch(searchQuery)}
-              disabled={!searchQuery.trim()}
-              className="px-4 py-2 text-sm font-medium text-blue-600 disabled:text-gray-400"
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
             >
               검색
             </button>
           </div>
 
-          {/* 자동완성 드롭다운 - 개선된 UI */}
+          {/* 자동완성 드롭다운 */}
           {searchSuggestions.length > 0 &&
             searchResults.length === 0 &&
             !isSearching && (
-              <div className="border-t bg-gray-50">
-                <div className="px-4 py-2">
-                  <p className="text-xs text-gray-500 font-medium mb-1">
-                    추천 검색어
-                  </p>
-                </div>
-                {searchSuggestions.map((suggestion, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSearch(suggestion)}
-                    className="w-full px-4 py-3 text-left hover:bg-white flex items-center gap-3 group border-b border-gray-100 last:border-0"
-                  >
-                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center group-hover:bg-blue-50">
-                      <svg
-                        className="w-4 h-4 text-gray-400 group-hover:text-blue-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                      </svg>
-                    </div>
-                    <span className="flex-1 text-sm text-gray-700 group-hover:text-gray-900">
-                      {suggestion
-                        .split(new RegExp(`(${searchQuery})`, "gi"))
-                        .map((part, i) =>
-                          part.toLowerCase() === searchQuery.toLowerCase() ? (
-                            <span
-                              key={i}
-                              className="font-semibold text-blue-600"
-                            >
-                              {part}
-                            </span>
-                          ) : (
-                            <span key={i}>{part}</span>
-                          )
-                        )}
-                    </span>
-                    <svg
-                      className="w-4 h-4 text-gray-300 group-hover:text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+              <div className="border-t border-gray-200">
+                <div className="py-2">
+                  {searchSuggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSearch(suggestion)}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </button>
-                ))}
+                      <div className="flex items-center gap-3">
+                        <svg
+                          className="w-4 h-4 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                          />
+                        </svg>
+                        <span className="text-sm text-gray-700">
+                          {suggestion}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
         </div>
@@ -243,6 +247,7 @@ export default function SearchModal() {
         <div className="flex-1 overflow-y-auto">
           {(isSearching ||
             searchResults.length > 0 ||
+            showComparison ||
             (searchQuery &&
               searchSuggestions.length === 0 &&
               !isSearching)) && (
@@ -251,11 +256,42 @@ export default function SearchModal() {
                 <div className="flex justify-center py-20">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                 </div>
+              ) : showComparison && comparisonData ? (
+                <ComparisonView
+                  query={searchQuery}
+                  comparison={comparisonData.comparison}
+                  lowestPrice={comparisonData.lowestPrice}
+                  onClose={() => setShowComparison(false)}
+                />
               ) : searchResults.length > 0 ? (
                 <>
-                  <p className="text-sm text-gray-600 mb-3">
-                    검색 결과 {searchResults.length}개{hasMore ? "+" : ""}
-                  </p>
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-gray-600">
+                        검색 결과 {searchResults.length}개{hasMore ? "+" : ""}
+                      </p>
+                      <button
+                        onClick={handleCompare}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          />
+                        </svg>
+                        편의점별 비교
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="space-y-3">
                     {searchResults.map((promo) => (
                       <PromoCardEnhanced
@@ -311,7 +347,7 @@ export default function SearchModal() {
             !searchSuggestions.length &&
             !searchQuery && (
               <div className="p-6 text-center text-gray-400 text-sm">
-                검색어를 입력하세요
+                찾고 싶은 상품이나 브랜드를 검색해보세요
               </div>
             )}
         </div>
