@@ -12,13 +12,15 @@ GS25, CU, 세븐일레븐, 이마트24의 1+1, 2+1 행사를 한눈에 확인하
 ## ✨ 주요 기능
 
 - 🏪 **4개 편의점 통합** - GS25, CU, 세븐일레븐, 이마트24
-- 🔍 **스마트 검색** - 제품명, 브랜드로 빠른 검색 + 자동완성
+- 🔍 **스마트 검색** - 제품명, 브랜드로 빠른 검색 + 자동완성 (네이버 Local Search API)
+- 📍 **내 주변 편의점** - 위치 기반 주변 편의점 검색 (네이버 지도 API)
 - 🏷️ **다중 필터링** - 브랜드별, 카테고리별, 행사 유형별 (1+1, 2+1, 할인), 날짜 범위
 - 💾 **저장 기능** - 관심 프로모션 북마크 (로그인 필요)
 - 🔐 **소셜 로그인** - Google, Kakao 간편 로그인
 - 📱 **PWA 지원** - 모바일 홈 화면에 설치 가능, 오프라인 지원, 설치 안내 UI
+- 🔔 **푸시 알림** - 신규/변경/종료 프로모션 자동 알림
 - ♾️ **무한 스크롤** - 부드러운 페이지네이션
-- 🤖 **자동 업데이트** - 매주 월요일 새벽 2시(KST) 자동 데이터 갱신
+- 🤖 **자동 업데이트** - 매주 월요일 새벽 2시(KST) 자동 데이터 갱신 (변경사항만 반영)
 
 ## 🛠 기술 스택
 
@@ -34,6 +36,8 @@ GS25, CU, 세븐일레븐, 이마트24의 1+1, 2+1 행사를 한눈에 확인하
 - **ORM**: Prisma (schema reference)
 - **Authentication**: Supabase Auth (Google, Kakao OAuth)
 - **API**: Next.js API Routes + Supabase REST API
+- **External APIs**: Naver Maps API, Naver Local Search API
+- **Push Notifications**: Web Push API + VAPID
 
 ### DevOps & Automation
 - **Hosting**: Vercel (Auto CI/CD)
@@ -63,8 +67,25 @@ pnpm start
 ### 환경변수
 
 ```env
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Naver APIs
+NEXT_PUBLIC_NCP_MAPS_CLIENT_ID=your_ncp_maps_client_id
+NCP_MAPS_CLIENT_SECRET=your_ncp_maps_client_secret
+NAVER_SEARCH_CLIENT_ID=your_naver_search_client_id
+NAVER_SEARCH_CLIENT_SECRET=your_naver_search_client_secret
+
+# Web Push (VAPID)
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
+VAPID_PRIVATE_KEY=your_vapid_private_key
+VAPID_SUBJECT=mailto:your_email@example.com
+
+# Webhook
+WEBHOOK_SECRET=your_webhook_secret
+BASE_URL=https://your-domain.com
 ```
 
 ## 📁 프로젝트 구조
@@ -113,9 +134,13 @@ conv-promo/
 
 GitHub Actions를 통해 **매주 월요일 새벽 2시(KST)**에 자동 실행됩니다.
 
+### 특징
+- **차분 업데이트**: 변경사항만 감지하여 신규/수정/삭제 처리
+- **중복 방지**: `brand_id + title + start_date` 기준으로 고유성 보장
+- **자동 알림**: 변경사항 발생 시 구독자에게 푸시 알림 발송
 - **수동 실행**: GitHub Actions 탭에서 "Run workflow" 클릭
 - **크롤러**: Python + Selenium 기반
-- **로그 보관**: 7일간 보관
+- **로그 보관**: 7일간 보관, JSON 백업 30일간 보관
 
 ## 📱 PWA 설치
 
@@ -146,7 +171,8 @@ GitHub Actions를 통해 **매주 월요일 새벽 2시(KST)**에 자동 실행�
 
 - `/` - 홈 (전체 프로모션 리스트)
 - `/popular` - 인기 프로모션 (2+1, 1+1 우선)
-- `/search` - 검색 (자동완성 지원)
+- `/search` - 검색 (네이버 Local Search API 자동완성)
+- `/nearby` - 내 주변 편의점 (네이버 지도 + 위치 기반 검색)
 - `/saved` - 저장한 프로모션 (로그인 필요)
 - `/mypage` - 마이페이지 (로그인 필요)
 
