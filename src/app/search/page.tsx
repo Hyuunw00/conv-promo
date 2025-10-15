@@ -7,12 +7,18 @@ import PromoCardEnhanced from "@/components/PromoCardEnhanced";
 import { createClient } from "@/lib/supabase/client";
 import { usePromotionList } from "@/hooks/usePromotionList";
 import ScrollToTop from "@/components/ScrollToTop";
+import ComparisonView from "@/components/ComparisonView";
 
 export default function SearchPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
+  const [comparisonData, setComparisonData] = useState<{
+    comparison: Promotion[];
+    lowestPrice: number | null;
+  } | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const ITEMS_PER_PAGE = 20;
@@ -82,6 +88,7 @@ export default function SearchPage() {
     setIsSearching(true);
     setSearchSuggestions([]); // 검색 시 제안 목록 초기화
     setSearchQuery(query);
+    setShowComparison(false); // 새 검색 시 비교 뷰 닫기
 
     const supabase = createClient();
     const { data } = await supabase
@@ -93,6 +100,30 @@ export default function SearchPage() {
     const results = (data as Promotion[]) || [];
     resetData(results);
     setIsSearching(false);
+  };
+
+  // 편의점별 비교
+  const handleCompare = async () => {
+    if (!searchQuery.trim()) return;
+
+    try {
+      const response = await fetch(
+        `/api/promotions/compare?query=${encodeURIComponent(searchQuery)}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch comparison");
+      }
+
+      const data = await response.json();
+      setComparisonData({
+        comparison: data.comparison,
+        lowestPrice: data.lowestPrice,
+      });
+      setShowComparison(true);
+    } catch (error) {
+      console.error("Comparison error:", error);
+    }
   };
 
   return (
@@ -202,12 +233,43 @@ export default function SearchPage() {
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
           </div>
+        ) : showComparison && comparisonData ? (
+          <ComparisonView
+            query={searchQuery}
+            comparison={comparisonData.comparison}
+            lowestPrice={comparisonData.lowestPrice}
+            onClose={() => setShowComparison(false)}
+          />
         ) : searchResults.length > 0 ? (
           <>
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-500">
+                  검색 결과 {searchResults.length}개{hasMore ? "+" : ""}
+                </p>
+                <button
+                  onClick={handleCompare}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
+                  </svg>
+                  편의점별 비교
+                </button>
+              </div>
+            </div>
+
             <div className="space-y-3">
-              <p className="text-sm text-gray-500 mb-4">
-                검색 결과 {searchResults.length}개{hasMore ? "+" : ""}
-              </p>
               {searchResults.map((promo) => (
                 <PromoCardEnhanced
                   key={promo.id}

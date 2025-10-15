@@ -22,7 +22,13 @@ const getDealBadge = (dealType: string) => {
   return badge;
 };
 
-export default function DealBadge({ dealType }: { dealType: string }) {
+export default function DealBadge({
+  dealType,
+  size = "sm",
+}: {
+  dealType: string;
+  size?: "sm" | "md";
+}) {
   const badge = getDealBadge(dealType);
   if (!badge) return null;
 
