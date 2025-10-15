@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  ArrowLeft,
-  MapPin,
-  Navigation,
-  ExternalLink,
-  X,
-} from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, ExternalLink, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Store, BrandType, BRAND_COLORS, BRAND_LABELS } from "@/types/store";
@@ -383,9 +377,7 @@ export default function NearbyClient() {
       if (data.success) {
         // 지도 중심 이동
         if (map) {
-          map.setCenter(
-            new naver.maps.LatLng(data.latitude, data.longitude)
-          );
+          map.setCenter(new naver.maps.LatLng(data.latitude, data.longitude));
         }
 
         // 지도 중심 업데이트 (자동으로 편의점 검색 실행됨)
@@ -428,6 +420,8 @@ export default function NearbyClient() {
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
+            console.log("data", data);
+
             // 검색 결과를 suggestions에 추가
             const suggestion = data.roadAddress || data.jibunAddress;
             setSuggestions([suggestion]);

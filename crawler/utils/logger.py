@@ -32,8 +32,11 @@ def setup_logger(name: str) -> logging.Logger:
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
 
-    # 파일 출력 핸들러 (logs 폴더에 날짜별 저장)
-    log_filename = f"logs/{datetime.now().strftime('%Y%m%d')}.log"
+    # 파일 출력 핸들러 (upload_to_db.py는 고정 파일명, 나머지는 날짜별)
+    if name == "upload_to_db":
+        log_filename = "logs/upload_to_db.log"
+    else:
+        log_filename = f"logs/{datetime.now().strftime('%Y%m%d')}.log"
     file_handler = logging.FileHandler(log_filename, encoding='utf-8')
     file_handler.setLevel(logging.DEBUG)
 

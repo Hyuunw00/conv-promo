@@ -53,7 +53,9 @@ def upload_cu():
         logger.info("=" * 60)
 
         # GitHub Actions 파싱용 JSON 출력
-        print(f"CRAWLER_RESULTS={json.dumps({'CU': stats})}")
+        result_json = json.dumps({'CU': stats})
+        print(f"CRAWLER_RESULTS={result_json}")
+        logger.info(f"CRAWLER_RESULTS={result_json}")
 
         return stats
 
@@ -94,7 +96,9 @@ def upload_seven():
         logger.info("=" * 60)
 
         # GitHub Actions 파싱용 JSON 출력
-        print(f"CRAWLER_RESULTS={json.dumps({'SevenEleven': stats})}")
+        result_json = json.dumps({'SevenEleven': stats})
+        print(f"CRAWLER_RESULTS={result_json}")
+        logger.info(f"CRAWLER_RESULTS={result_json}")
 
         return stats
 
@@ -135,7 +139,9 @@ def upload_gs25():
         logger.info("=" * 60)
 
         # GitHub Actions 파싱용 JSON 출력
-        print(f"CRAWLER_RESULTS={json.dumps({'GS25': stats})}")
+        result_json = json.dumps({'GS25': stats})
+        print(f"CRAWLER_RESULTS={result_json}")
+        logger.info(f"CRAWLER_RESULTS={result_json}")
 
         return stats
 
@@ -176,7 +182,9 @@ def upload_emart24():
         logger.info("=" * 60)
 
         # GitHub Actions 파싱용 JSON 출력
-        print(f"CRAWLER_RESULTS={json.dumps({'Emart24': stats})}")
+        result_json = json.dumps({'Emart24': stats})
+        print(f"CRAWLER_RESULTS={result_json}")
+        logger.info(f"CRAWLER_RESULTS={result_json}")
 
         return stats
 
@@ -230,7 +238,9 @@ def upload_all():
         logger.info("=" * 60)
 
         # JSON 형식으로도 출력 (GitHub Actions에서 파싱용)
-        print(f"CRAWLER_RESULTS={json.dumps(results)}")
+        result_json = json.dumps(results)
+        print(f"CRAWLER_RESULTS={result_json}")
+        logger.info(f"CRAWLER_RESULTS={result_json}")
 
         return results
 
