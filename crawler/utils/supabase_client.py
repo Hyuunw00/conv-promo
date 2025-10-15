@@ -61,25 +61,25 @@ class SupabaseClient:
             logger.error(f"Failed to delete promotions: {e}")
             raise
 
-    def make_promotion_key(self, promo: Dict[str, Any]) -> str:
+    def make_promotion_key(self, promo: Dict[str, Any], brand_id: str = None) -> str:
         """
         프로모션 고유 키 생성 (중복 확인용)
 
         Args:
             promo: 프로모션 데이터
+            brand_id: 브랜드 ID (선택)
 
         Returns:
-            고유 키 (title + barcode or title + price)
+            고유 키 (brand_id + title + start_date)
         """
         title = promo.get('title', '')
-        barcode = promo.get('barcode', '')
-        price = promo.get('sale_price', 0)
+        start_date = promo.get('start_date', '')
 
-        # 바코드가 있으면 title+barcode, 없으면 title+price
-        if barcode:
-            return f"{title}_{barcode}"
+        # 같은 브랜드 내에서 같은 제목의 프로모션은 시작일 기준으로 하나만 존재
+        if brand_id:
+            return f"{brand_id}_{title}_{start_date}"
         else:
-            return f"{title}_{price}"
+            return f"{title}_{start_date}"
 
     def get_existing_promotions(self, brand_id: str, start_date: str) -> List[Dict[str, Any]]:
         """
@@ -129,8 +129,8 @@ class SupabaseClient:
             existing_promos = self.get_existing_promotions(brand_id, start_date)
 
             # 고유 키로 매핑
-            existing_map = {self.make_promotion_key(p): p for p in existing_promos}
-            new_map = {self.make_promotion_key(p): p for p in promotions}
+            existing_map = {self.make_promotion_key(p, brand_id): p for p in existing_promos}
+            new_map = {self.make_promotion_key(p, brand_id): p for p in promotions}
 
             # 비교
             existing_keys = set(existing_map.keys())
