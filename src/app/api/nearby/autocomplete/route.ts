@@ -48,7 +48,14 @@ export async function GET(request: NextRequest) {
     const data = await naverResponse.json();
 
     // 검색 결과를 자동완성 형식으로 변환
-    const suggestions = data.items.map((place: any) => ({
+    const suggestions = data.items.map((place: {
+      title: string;
+      address: string;
+      roadAddress?: string;
+      mapx: string;
+      mapy: string;
+      category: string;
+    }) => ({
       placeName: place.title.replace(/<[^>]*>/g, ""), // HTML 태그 제거
       addressName: place.address,
       roadAddressName: place.roadAddress || place.address,
