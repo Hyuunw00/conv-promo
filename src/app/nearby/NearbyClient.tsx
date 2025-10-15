@@ -26,7 +26,16 @@ export default function NearbyClient() {
   const [markers, setMarkers] = useState<naver.maps.Marker[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<
+    Array<{
+      placeName: string;
+      addressName: string;
+      roadAddressName: string;
+      x: number;
+      y: number;
+      category: string;
+    }>
+  >([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
 
   // 네이버 지도 SDK 로드
@@ -403,7 +412,7 @@ export default function NearbyClient() {
     setShowSuggestions(false);
   };
 
-  // 디바운싱된 자동완성 검색
+  // 디바운싱된 자동완성 검색 (Naver Local Search API)
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSuggestions([]);
@@ -414,17 +423,13 @@ export default function NearbyClient() {
     const timeoutId = setTimeout(async () => {
       try {
         const response = await fetch(
-          `/api/nearby/geocode?query=${encodeURIComponent(searchQuery)}`
+          `/api/nearby/autocomplete?query=${encodeURIComponent(searchQuery)}`
         );
 
         if (response.ok) {
           const data = await response.json();
-          if (data.success) {
-            console.log("data", data);
-
-            // 검색 결과를 suggestions에 추가
-            const suggestion = data.roadAddress || data.jibunAddress;
-            setSuggestions([suggestion]);
+          if (data.success && data.suggestions.length > 0) {
+            setSuggestions(data.suggestions);
             setShowSuggestions(true);
           } else {
             setSuggestions([]);
@@ -442,33 +447,24 @@ export default function NearbyClient() {
   }, [searchQuery]);
 
   // 자동완성 선택
-  const handleSelectSuggestion = async (suggestion: string) => {
-    setSearchQuery(suggestion);
+  const handleSelectSuggestion = (suggestion: {
+    placeName: string;
+    addressName: string;
+    roadAddressName: string;
+    x: number;
+    y: number;
+  }) => {
+    setSearchQuery(suggestion.placeName);
     setShowSuggestions(false);
 
-    // 자동으로 검색 실행
-    try {
-      const response = await fetch(
-        `/api/nearby/geocode?query=${encodeURIComponent(suggestion)}`
-      );
+    // 지도 이동 (Naver Local Search API는 이미 좌표를 제공)
+    if (map) {
+      const latitude = suggestion.y;
+      const longitude = suggestion.x;
 
-      if (!response.ok) {
-        throw new Error("Failed to geocode");
-      }
-
-      const data = await response.json();
-
-      if (data.success && map) {
-        map.setCenter(new naver.maps.LatLng(data.latitude, data.longitude));
-        setMapCenter({
-          latitude: data.latitude,
-          longitude: data.longitude,
-        });
-        toast.success(`${data.roadAddress || data.jibunAddress}로 이동`);
-      }
-    } catch (error) {
-      console.error("Search error:", error);
-      toast.error("검색 결과를 찾을 수 없습니다");
+      map.setCenter(new naver.maps.LatLng(latitude, longitude));
+      setMapCenter({ latitude, longitude });
+      toast.success(`${suggestion.roadAddressName}로 이동`);
     }
   };
 
@@ -578,7 +574,7 @@ export default function NearbyClient() {
                       className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors first:rounded-t-lg last:rounded-b-lg"
                     >
                       <MapPin className="w-3 h-3 inline mr-2 text-gray-400" />
-                      {suggestion}
+                      {suggestion.placeName}
                     </button>
                   ))}
                 </div>
