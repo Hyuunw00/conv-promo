@@ -2,7 +2,7 @@
 
 import { usePromotions } from "@/hooks/use-promotions";
 import PromoCard from "@/components/promo-card";
-import Loading from "@/components/ui/Loading";
+import Loading from "@/components/Loading";
 import { Promotion } from "@/types/promotion";
 import { toast } from "sonner";
 

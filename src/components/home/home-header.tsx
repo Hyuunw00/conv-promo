@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import DateRangeFilter from "./DateRangeFilter";
-import FilterBottomSheet from "./FilterBottomSheet";
+import DateRangeFilter from "./date-range-filter";
+import FilterBottomSheet from "../filter-botton-sheet";
 import { SlidersHorizontal } from "lucide-react";
 import Image from "next/image";
 

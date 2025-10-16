@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, Bell, Settings, Shield } from "lucide-react";
 import Link from "next/link";
-import Loading from "@/components/ui/Loading";
+import Loading from "@/components/Loading";
 
 export default function AdminPage() {
   const router = useRouter();

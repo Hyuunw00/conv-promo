@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
-import { Send, ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
-import Link from 'next/link';
-import Loading from '@/components/ui/Loading';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { Send, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
+import Loading from "@/components/Loading";
 
 export default function AdminNotificationsPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [url, setUrl] = useState('/');
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [url, setUrl] = useState("/");
   const [isSending, setIsSending] = useState(false);
 
   // 로딩 중
@@ -23,45 +23,47 @@ export default function AdminNotificationsPage() {
 
   // 로그인 안 됨
   if (!user) {
-    router.push('/auth/login');
+    router.push("/auth/login");
     return null;
   }
 
   const handleSend = async () => {
     if (!title.trim() || !body.trim()) {
-      toast.error('제목과 내용을 입력해주세요');
+      toast.error("제목과 내용을 입력해주세요");
       return;
     }
 
     setIsSending(true);
     try {
-      const response = await fetch('/api/notifications/broadcast', {
-        method: 'POST',
+      const response = await fetch("/api/notifications/broadcast", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           title: title.trim(),
           body: body.trim(),
-          url: url.trim() || '/',
+          url: url.trim() || "/",
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || '알림 발송 실패');
+        throw new Error(result.error || "알림 발송 실패");
       }
 
       toast.success(`알림 발송 완료! (${result.sent}명)`);
 
       // 폼 초기화
-      setTitle('');
-      setBody('');
-      setUrl('/');
+      setTitle("");
+      setBody("");
+      setUrl("/");
     } catch (error) {
-      console.error('Send notification error:', error);
-      toast.error(error instanceof Error ? error.message : '알림 발송 중 오류 발생');
+      console.error("Send notification error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "알림 발송 중 오류 발생"
+      );
     } finally {
       setIsSending(false);
     }
@@ -108,9 +110,7 @@ export default function AdminNotificationsPage() {
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               maxLength={50}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {title.length}/50
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{title.length}/50</p>
           </div>
 
           {/* 내용 */}
@@ -125,9 +125,7 @@ export default function AdminNotificationsPage() {
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px] resize-none"
               maxLength={150}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {body.length}/150
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{body.length}/150</p>
           </div>
 
           {/* URL */}
@@ -158,10 +156,10 @@ export default function AdminNotificationsPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 mb-1">
-                  {title || '제목을 입력하세요'}
+                  {title || "제목을 입력하세요"}
                 </p>
                 <p className="text-sm text-gray-600">
-                  {body || '내용을 입력하세요'}
+                  {body || "내용을 입력하세요"}
                 </p>
               </div>
             </div>
@@ -175,7 +173,7 @@ export default function AdminNotificationsPage() {
           className="w-full py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isSending ? (
-            '발송 중...'
+            "발송 중..."
           ) : (
             <>
               <Send className="w-5 h-5" />

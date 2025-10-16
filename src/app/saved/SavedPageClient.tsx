@@ -4,12 +4,12 @@ import { useState, useCallback } from "react";
 import PromoCardEnhanced from "@/components/promo-card";
 import { Heart, SlidersHorizontal, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import Loading from "@/components/ui/Loading";
+import Loading from "@/components/Loading";
 import { createClient } from "@/lib/supabase/client";
 import { usePromotions } from "@/hooks/use-promotions";
 import { Promotion } from "@/types/promotion";
 import { toast } from "sonner";
-import FilterBottomSheet from "@/components/layout/FilterBottomSheet";
+import FilterBottomSheet from "@/components/filter-botton-sheet";
 
 interface SavedPromotionItem {
   promo_id: string;

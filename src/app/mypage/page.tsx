@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut, deleteAccount } from "@/lib/auth";
 import { toast } from "sonner";
-import Loading from "@/components/ui/Loading";
+import Loading from "@/components/Loading";
 import NotificationPermission from "@/components/notifications/NotificationPermission";
 import Link from "next/link";
 import {

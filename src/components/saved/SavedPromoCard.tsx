@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Heart } from "lucide-react";
 import { removeSavedPromo } from "@/app/actions/saved-actions";
+import Image from "next/image";
 
 interface SavedPromoCardProps {
   promo: {
@@ -54,11 +55,15 @@ export function SavedPromoCard({
       }`}
     >
       {promo.image_url && (
-        <div className="h-48 bg-gray-100 flex items-center justify-center">
-          <img
+        <div className="relative h-48 bg-gray-100">
+          <Image
             src={promo.image_url}
             alt={promo.title}
-            className="h-full w-full object-cover"
+            fill
+            sizes="(max-width: 768px) 100vw, 448px"
+            className="object-cover"
+            loading="lazy"
+            quality={85}
           />
         </div>
       )}
