@@ -1,11 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { Promotion } from "@/types/promotion";
-import {
-  getOriginalCategories,
-  UnifiedCategory,
-} from "@/utils/categoryMapper";
+import { getOriginalCategories, UnifiedCategory } from "@/utils/categoryMapper";
 
-export interface FetchPromotionsOptions {
+export interface FetchPromotionsParams {
   limit?: number;
   offset?: number;
   brandName?: string;
@@ -22,10 +19,10 @@ export class PromotionService {
 
   /**
    * 프로모션 조회
-   * @param options 옵션
+   * @param params 옵션
    * @returns 프로모션 배열
    */
-  static async fetchPromotions(options: FetchPromotionsOptions = {}): Promise<{
+  static async fetchPromotions(params: FetchPromotionsParams = {}): Promise<{
     data: Promotion[] | null;
     error: Error | null;
     hasMore?: boolean;
@@ -43,7 +40,7 @@ export class PromotionService {
         endDate,
         orderBy = "end_date",
         ascending = true,
-      } = options;
+      } = params;
 
       let query = supabase
         .from("promo_with_brand")

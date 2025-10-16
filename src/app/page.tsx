@@ -2,6 +2,11 @@ import { PromotionService } from "@/services/promotion/promotion.service";
 import { getKSTDateString, toKST } from "@/utils/date";
 import Client from "./client";
 
+export const metadata = {
+  title: "편의점 프로모션 - 전국 편의점 행사 한눈에",
+  description: "GS25, CU, 세븐일레븐, 이마트24 프로모션을 한 곳에서",
+};
+
 interface HomeProps {
   searchParams: Promise<{
     brand?: string;
@@ -9,6 +14,16 @@ interface HomeProps {
     deal?: string;
     sort?: string;
   }>;
+}
+
+async function getInitialData() {
+  const { data: initialData } = await PromotionService.fetchPromotions({
+    brandName: "ALL",
+    dealType: "ALL",
+    category: "ALL",
+    startDate: "ALL",
+    endDate: "ALL",
+  });
 }
 
 export default async function Home({ searchParams }: HomeProps) {
@@ -31,9 +46,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const orderBy = sort === "saved" ? "saved_count" : "start_date";
   const ascending = false; // 둘 다 내림차순 (saved_count 큰순, start_date 큰순)
 
-  const { data: initialData, error } = await PromotionService.fetchPromotions({
-    limit: 5,
-    offset: 0,
+  const { data: initialData } = await PromotionService.fetchPromotions({
     brandName,
     dealType,
     category,

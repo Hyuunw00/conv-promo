@@ -26,7 +26,7 @@ interface HeaderProps {
   ) => void;
 }
 
-export default function Header({
+export default function HomeHeader({
   selectedBrand,
   onBrandChange,
   selectedDeal,

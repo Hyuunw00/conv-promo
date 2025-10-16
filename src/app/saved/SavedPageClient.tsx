@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import PromoCardEnhanced from "@/components/PromoCardEnhanced";
+import PromoCardEnhanced from "@/components/promo-card";
 import { Heart, SlidersHorizontal, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import Loading from "@/components/ui/Loading";
 import { createClient } from "@/lib/supabase/client";
-import { usePromotionList } from "@/hooks/usePromotionList";
+import { usePromotions } from "@/hooks/use-promotions";
 import { Promotion } from "@/types/promotion";
 import { toast } from "sonner";
 import FilterBottomSheet from "@/components/layout/FilterBottomSheet";
@@ -67,9 +67,9 @@ export default function SavedPageClient({
     loadMoreRef,
     savedPromoIds,
     handleSaveToggle: hookHandleSaveToggle,
-  } = usePromotionList({
+  } = usePromotions({
     initialData: initialPromos,
-    fetchData: async (page) => {
+    fetchData: async (page: number) => {
       const supabase = createClient();
       const { data: userData } = await supabase.auth.getUser();
 
@@ -350,7 +350,9 @@ export default function SavedPageClient({
                     onClick={handleSelectAll}
                     className="px-2 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap"
                   >
-                    {selectedPromoIds.size === displayedPromos.length ? "해제" : "전체"}
+                    {selectedPromoIds.size === displayedPromos.length
+                      ? "해제"
+                      : "전체"}
                   </button>
                   {/* 삭제 버튼 */}
                   {selectedPromoIds.size > 0 && (
@@ -394,7 +396,9 @@ export default function SavedPageClient({
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">예상 구매 금액</span>
+                    <span className="text-sm text-gray-600">
+                      예상 구매 금액
+                    </span>
                     <span className="text-base font-bold text-gray-900">
                       {totalPurchase.toLocaleString()}원
                     </span>

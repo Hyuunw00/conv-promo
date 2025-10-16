@@ -17,7 +17,8 @@ import { fmtDate } from "@/utils/date";
 import BrandBadge from "./BrandBadge";
 import DealBadge from "./DealBadge";
 import Image from "next/image";
-interface PromoCardEnhancedProps {
+
+interface PromoCardProps {
   promotion: Promotion & {
     image_url?: string;
     normal_price?: number;
@@ -31,12 +32,12 @@ interface PromoCardEnhancedProps {
   onSaveToggle?: (promoId: string) => void;
 }
 
-export default function PromoCardEnhanced({
+export default function PromoCard({
   promotion,
   isSaved = false,
   isExpired = false,
   onSaveToggle,
-}: PromoCardEnhancedProps) {
+}: PromoCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHearted, setIsHearted] = useState(isSaved);
 
@@ -74,15 +75,14 @@ export default function PromoCardEnhanced({
       {/* 이미지 섹션 */}
       {promotion.image_url && (
         <div className="relative bg-gray-50 h-56 flex items-center justify-center overflow-hidden">
-          <img
+          <Image
             src={promotion.image_url}
             alt={promotion.title}
-            className={`max-w-full max-h-full w-auto h-auto object-contain ${
-              isExpired ? "grayscale" : ""
-            }`}
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
+            fill
+            sizes="(max-width: 768px) 100vw, 448px"
+            className={`object-contain ${isExpired ? "grayscale" : ""}`}
+            loading="lazy"
+            quality={85}
           />
           {isExpired && (
             <div className="absolute top-3 left-3 bg-gray-600 text-white px-3 py-1.5 rounded-lg font-bold text-sm shadow-md">

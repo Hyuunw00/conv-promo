@@ -3,9 +3,9 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Promotion } from "@/types/promotion";
-import PromoCardEnhanced from "@/components/PromoCardEnhanced";
+import PromoCardEnhanced from "@/components/promo-card";
 import { createClient } from "@/lib/supabase/client";
-import { usePromotionList } from "@/hooks/usePromotionList";
+import { usePromotions } from "@/hooks/use-promotions";
 import ScrollToTop from "@/components/ScrollToTop";
 import ComparisonView from "@/components/ComparisonView";
 
@@ -32,9 +32,9 @@ export default function SearchPage() {
     savedPromoIds,
     handleSaveToggle,
     resetData,
-  } = usePromotionList({
+  } = usePromotions({
     initialData: [],
-    fetchData: async (page) => {
+    fetchData: async (page: number) => {
       const supabase = createClient();
       const { data } = await supabase
         .from("promo_with_brand")
@@ -270,7 +270,7 @@ export default function SearchPage() {
             </div>
 
             <div className="space-y-3">
-              {searchResults.map((promo) => (
+              {searchResults.map((promo: Promotion) => (
                 <PromoCardEnhanced
                   key={promo.id}
                   promotion={promo}

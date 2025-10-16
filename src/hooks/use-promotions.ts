@@ -4,10 +4,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { toggleSavePromo } from "@/app/actions/saved-actions";
 import { User } from "@supabase/supabase-js";
 
-interface UsePromotionListOptions {
+interface UsePromotionsOptions {
   initialData?: Promotion[];
   fetchData: (page: number) => Promise<{ data: Promotion[]; hasMore: boolean }>;
-  itemsPerPage?: number;
 }
 
 /**
@@ -16,11 +15,10 @@ interface UsePromotionListOptions {
  * - 저장 토글 기능
  * - 데이터 로딩 상태 관리
  */
-export function usePromotionList({
+export function usePromotions({
   initialData = [],
   fetchData,
-  itemsPerPage = 10,
-}: UsePromotionListOptions) {
+}: UsePromotionsOptions) {
   // 데이터 상태
   const [promos, setPromos] = useState<Promotion[]>(initialData);
   const [page, setPage] = useState(initialData.length > 0 ? 1 : 0);

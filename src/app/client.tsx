@@ -1,12 +1,11 @@
 "use client";
 
-import Header from "@/components/layout/Header";
-import PromotionList from "@/components/PromotionList";
+import HomeHeader from "@/components/layout/home-header";
+import PromotionList from "@/components/promo-list";
 import { Promotion } from "@/types/promotion";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import ScrollToTop from "@/components/ScrollToTop";
 import { useRouter, useSearchParams } from "next/navigation";
-
 interface ClientProps {
   initialData: Promotion[];
   defaultStartDate: string;
@@ -32,8 +31,18 @@ export default function Client({
   // URL 쿼리가 없고 로컬 스토리지에 저장된 필터가 있으면 사용
   const getInitialFilters = () => {
     // URL 쿼리가 있으면 우선 사용
-    if (initialBrand !== "ALL" || initialCategory !== "ALL" || initialDeal !== "ALL" || initialSort !== "saved") {
-      return { brand: initialBrand, category: initialCategory, deal: initialDeal, sort: initialSort };
+    if (
+      initialBrand !== "ALL" ||
+      initialCategory !== "ALL" ||
+      initialDeal !== "ALL" ||
+      initialSort !== "saved"
+    ) {
+      return {
+        brand: initialBrand,
+        category: initialCategory,
+        deal: initialDeal,
+        sort: initialSort,
+      };
     }
 
     // 로컬 스토리지 확인
@@ -58,11 +67,11 @@ export default function Client({
     return { brand: "ALL", category: "ALL", deal: "ALL", sort: "saved" };
   };
 
-  const initialFilters = getInitialFilters();
-  const [selectedBrand, setSelectedBrand] = useState<string>(initialFilters.brand);
-  const [selectedDeal, setSelectedDeal] = useState<string>(initialFilters.deal);
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialFilters.category);
-  const [selectedSort, setSelectedSort] = useState<string>(initialFilters.sort);
+  const { brand, category, deal, sort } = getInitialFilters();
+  const [selectedBrand, setSelectedBrand] = useState<string>(brand);
+  const [selectedDeal, setSelectedDeal] = useState<string>(deal);
+  const [selectedCategory, setSelectedCategory] = useState<string>(category);
+  const [selectedSort, setSelectedSort] = useState<string>(sort);
 
   const [selectedDateRange, setSelectedDateRange] = useState({
     start: defaultStartDate,
@@ -119,7 +128,12 @@ export default function Client({
   };
 
   // 필터 변경 핸들러 (한 번에 모두 처리)
-  const handleFiltersChange = (brand: string, category: string, deal: string, sort: string) => {
+  const handleFiltersChange = (
+    brand: string,
+    category: string,
+    deal: string,
+    sort: string
+  ) => {
     setSelectedBrand(brand);
     setSelectedCategory(category);
     setSelectedDeal(deal);
@@ -141,9 +155,19 @@ export default function Client({
 
   // 초기 로드 시 로컬 스토리지 필터를 URL에 반영
   useEffect(() => {
-    if (initialBrand === "ALL" && initialCategory === "ALL" && initialDeal === "ALL" && initialSort === "saved") {
-      if (initialFilters.brand !== "ALL" || initialFilters.category !== "ALL" || initialFilters.deal !== "ALL" || initialFilters.sort !== "saved") {
-        updateURL(initialFilters.brand, initialFilters.category, initialFilters.deal, initialFilters.sort);
+    if (
+      initialBrand === "ALL" &&
+      initialCategory === "ALL" &&
+      initialDeal === "ALL" &&
+      initialSort === "saved"
+    ) {
+      if (
+        brand !== "ALL" ||
+        category !== "ALL" ||
+        deal !== "ALL" ||
+        sort !== "saved"
+      ) {
+        updateURL(brand, category, deal, sort);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -151,7 +175,7 @@ export default function Client({
 
   return (
     <>
-      <Header
+      <HomeHeader
         selectedDeal={selectedDeal}
         selectedBrand={selectedBrand}
         selectedCategory={selectedCategory}

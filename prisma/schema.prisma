@@ -1,4 +1,4 @@
-// 현재 미사용 
+// 현재 미사용(나중에 Nest.js로 API 붙일때 활용)
 
 generator client {
   provider = "prisma-client-js"
