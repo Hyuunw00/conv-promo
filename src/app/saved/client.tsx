@@ -1,51 +1,28 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import PromoCardEnhanced from "@/components/promo-card";
-import { Heart, SlidersHorizontal, ArrowLeft } from "lucide-react";
+import { Heart } from "lucide-react";
 import Link from "next/link";
 import Loading from "@/components/Loading";
-import { createClient } from "@/lib/supabase/client";
 import { usePromotions } from "@/hooks/use-promotions";
 import { Promotion } from "@/types/promotion";
 import { toast } from "sonner";
-import FilterBottomSheet from "@/components/filter-botton-sheet";
-
-interface SavedPromotionItem {
-  promo_id: string;
-  promo: {
-    id: string;
-    title: string;
-    raw_title: string;
-    deal_type: string;
-    normal_price: number;
-    sale_price: number;
-    start_date: string;
-    end_date: string;
-    image_url: string;
-    barcode: string | null;
-    source_url: string;
-    description: string | null;
-    category: string | null;
-    brand: {
-      name: string;
-    } | null;
-  } | null;
-}
+import FilterBottomSheet from "@/components/filter-bottom-sheet";
+import { fetchSavedPromotions } from "@/lib/api/saved.api";
+import SavedHeader from "@/components/saved/saved-header";
+import PromoCard from "@/components/promo-card";
 
 interface SavedPageClientProps {
-  initialPromos: Promotion[];
+  initialData: Promotion[];
   totalCount: number;
   userEmail: string;
 }
 
 export default function SavedPageClient({
-  initialPromos,
+  initialData,
   totalCount,
   userEmail,
 }: SavedPageClientProps) {
-  const ITEMS_PER_PAGE = 10;
-
   // 필터 상태
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState("ALL");
@@ -68,73 +45,9 @@ export default function SavedPageClient({
     savedPromoIds,
     handleSaveToggle: hookHandleSaveToggle,
   } = usePromotions({
-    initialData: initialPromos,
+    initialData,
     fetchData: async (page: number) => {
-      const supabase = createClient();
-      const { data: userData } = await supabase.auth.getUser();
-
-      if (!userData?.user?.email) {
-        return { data: [], hasMore: false };
-      }
-
-      const { data, error } = await supabase
-        .from("saved_promotions")
-        .select(
-          `
-          promo_id,
-          promo:promo_id (
-            id,
-            title,
-            raw_title,
-            deal_type,
-            normal_price,
-            sale_price,
-            start_date,
-            end_date,
-            image_url,
-            barcode,
-            source_url,
-            description,
-            category,
-            brand:brand_id (
-              name
-            )
-          )
-        `
-        )
-        .eq("user_email", userData.user.email)
-        .order("created_at", { ascending: false })
-        .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
-
-      if (error) throw error;
-
-      const newPromos = ((data as unknown as SavedPromotionItem[])
-        ?.map((item) => {
-          if (!item.promo) return null;
-          const promo = item.promo;
-          return {
-            id: promo.id,
-            brand_name: promo.brand?.name || "",
-            title: promo.title,
-            deal_type: promo.deal_type,
-            start_date: promo.start_date,
-            end_date: promo.end_date,
-            sale_price: promo.sale_price,
-            normal_price: promo.normal_price,
-            image_url: promo.image_url,
-            barcode: promo.barcode || undefined,
-            source_url: promo.source_url,
-            raw_title: promo.raw_title,
-            category: promo.category || undefined,
-          } as Promotion;
-        })
-        .filter((item): item is Promotion => item !== null) ||
-        []) as Promotion[];
-
-      return {
-        data: newPromos,
-        hasMore: newPromos.length === ITEMS_PER_PAGE,
-      };
+      return await fetchSavedPromotions(userEmail, page);
     },
   });
 
@@ -189,7 +102,8 @@ export default function SavedPageClient({
 
   // 저장된 프로모션만 필터링 + 제거된 항목 제외 + 필터 적용
   const displayedPromos = promos.filter((promo) => {
-    if (!savedPromoIds.has(promo.id) || removedIds.has(promo.id)) return false;
+    // saved 페이지의 promos는 이미 모두 저장된 것들
+    if (removedIds.has(promo.id)) return false;
 
     // 브랜드 필터
     if (selectedBrand !== "ALL" && promo.brand_name !== selectedBrand)
@@ -283,102 +197,18 @@ export default function SavedPageClient({
   return (
     <>
       {/* 헤더 */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <Link
-                href="/"
-                className="text-gray-600 hover:text-gray-900 transition-colors flex-shrink-0"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              {!isEditMode ? (
-                <div className="min-w-0">
-                  <h1 className="text-lg font-bold text-gray-900 truncate">
-                    <Heart className="inline-block w-5 h-5 mr-1 text-red-500 fill-red-500" />
-                    저장한 프로모션
-                  </h1>
-                  <p className="text-xs text-gray-500 mt-0.5 truncate">
-                    {totalCount > 0
-                      ? `${totalCount}개의 프로모션을 저장했어요`
-                      : "나중에 보고 싶은 프로모션을 저장하세요"}
-                  </p>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-bold text-gray-900">편집</h1>
-                  {selectedPromoIds.size > 0 && (
-                    <span className="text-sm text-gray-600">
-                      ({selectedPromoIds.size}개 선택)
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* 우측 버튼들 */}
-            <div className="flex items-center gap-2">
-              {!isEditMode ? (
-                <>
-                  {/* 필터 버튼 */}
-                  <button
-                    onClick={() => setIsFilterOpen(true)}
-                    className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <SlidersHorizontal className="w-5 h-5 text-gray-600" />
-                    {activeFilterCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </button>
-                  {/* 편집 버튼 */}
-                  {displayedPromos.length > 0 && (
-                    <button
-                      onClick={() => setIsEditMode(true)}
-                      className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      편집
-                    </button>
-                  )}
-                </>
-              ) : (
-                <>
-                  {/* 전체 선택 버튼 */}
-                  <button
-                    onClick={handleSelectAll}
-                    className="px-2 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap"
-                  >
-                    {selectedPromoIds.size === displayedPromos.length
-                      ? "해제"
-                      : "전체"}
-                  </button>
-                  {/* 삭제 버튼 */}
-                  {selectedPromoIds.size > 0 && (
-                    <button
-                      onClick={handleBulkDelete}
-                      className="px-2 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap"
-                    >
-                      삭제
-                    </button>
-                  )}
-                  {/* 취소 버튼 */}
-                  <button
-                    onClick={() => {
-                      setIsEditMode(false);
-                      setSelectedPromoIds(new Set());
-                    }}
-                    className="px-2 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors whitespace-nowrap"
-                  >
-                    취소
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <SavedHeader
+        isEditMode={isEditMode}
+        totalCount={totalCount}
+        selectedPromoIds={selectedPromoIds}
+        setSelectedPromoIds={setSelectedPromoIds}
+        setIsFilterOpen={setIsFilterOpen}
+        setIsEditMode={setIsEditMode}
+        handleSelectAll={handleSelectAll}
+        handleBulkDelete={handleBulkDelete}
+        activeFilterCount={activeFilterCount}
+        displayedPromos={displayedPromos}
+      />
 
       <main className="px-3 pb-16 pt-3">
         {displayedPromos.length > 0 ? (
@@ -416,7 +246,7 @@ export default function SavedPageClient({
             )}
 
             <div className="space-y-3">
-              {displayedPromos.map((promo) => (
+              {displayedPromos.map((promo, index) => (
                 <div
                   key={promo.id}
                   className={`relative ${
@@ -457,11 +287,12 @@ export default function SavedPageClient({
                       </div>
                     </div>
                   )}
-                  <PromoCardEnhanced
+                  <PromoCard
                     promotion={promo}
                     isSaved={savedPromoIds.has(promo.id)}
                     isExpired={isExpiredPromo(promo.end_date)}
                     onSaveToggle={isEditMode ? undefined : handleSaveToggle}
+                    priority={index === 0}
                   />
                 </div>
               ))}

@@ -18,29 +18,30 @@ export class SavedPromotionService {
    * @param userEmail 사용자 이메일
    * @returns 저장된 프로모션 ID 배열
    */
-  static async getSavedPromoIds(userEmail: string): Promise<{
+  static async fetchSavedPromoIds(userEmail: string): Promise<{
     data: string[] | null;
     error: Error | null;
   }> {
     try {
       const supabase = await createClient();
       const { data, error } = await supabase
-        .from('saved_promotions')
-        .select('promo_id')
-        .eq('user_email', userEmail);
+        .from("saved_promotions")
+        .select("promo_id")
+        .eq("user_email", userEmail);
 
       if (error) {
-        console.error('Error loading saved promo ids:', error);
+        console.error("Error loading saved promo ids:", error);
         return { data: null, error };
       }
 
-      const ids = data?.map(item => item.promo_id) || [];
+      const ids = data?.map((item) => item.promo_id) || [];
       return { data: ids, error: null };
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error("Unexpected error:", error);
       return {
         data: null,
-        error: error instanceof Error ? error : new Error('Unknown error occurred'),
+        error:
+          error instanceof Error ? error : new Error("Unknown error occurred"),
       };
     }
   }
@@ -49,15 +50,16 @@ export class SavedPromotionService {
    * @param userEmail 사용자 이메일
    * @returns 저장된 프로모션 목록
    */
-  static async getSavedPromotions(userEmail: string): Promise<{
+  static async fetchSavedPromotions(userEmail: string): Promise<{
     data: SavedPromotion[] | null;
     error: Error | null;
   }> {
     try {
       const supabase = await createClient();
       const { data, error } = await supabase
-        .from('saved_promotions')
-        .select(`
+        .from("saved_promotions")
+        .select(
+          `
           id,
           created_at,
           promo:promo_with_brand!inner (
@@ -71,23 +73,26 @@ export class SavedPromotionService {
             end_date,
             image_url
           )
-        `)
-        .eq('user_email', userEmail)
-        .order('created_at', { ascending: false });
+        `
+        )
+        .eq("user_email", userEmail)
+        .order("created_at", { ascending: false });
 
       if (error) {
-        console.error('Error loading saved promos:', error);
+        console.error("Error loading saved promos:", error);
         return { data: null, error };
       }
 
       // 데이터 형식 변환
-      const formattedData = data?.map(item => item.promo as unknown as SavedPromotion) || [];
+      const formattedData =
+        data?.map((item) => item.promo as unknown as SavedPromotion) || [];
       return { data: formattedData, error: null };
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error("Unexpected error:", error);
       return {
         data: null,
-        error: error instanceof Error ? error : new Error('Unknown error occurred'),
+        error:
+          error instanceof Error ? error : new Error("Unknown error occurred"),
       };
     }
   }
@@ -98,30 +103,35 @@ export class SavedPromotionService {
    * @param promoId 프로모션 ID
    * @returns 저장 여부
    */
-  static async isSaved(userEmail: string, promoId: string): Promise<{
+  static async isSaved(
+    userEmail: string,
+    promoId: string
+  ): Promise<{
     data: boolean;
     error: Error | null;
   }> {
     try {
       const supabase = await createClient();
       const { data, error } = await supabase
-        .from('saved_promotions')
-        .select('id')
-        .eq('user_email', userEmail)
-        .eq('promo_id', promoId)
+        .from("saved_promotions")
+        .select("id")
+        .eq("user_email", userEmail)
+        .eq("promo_id", promoId)
         .single();
 
-      if (error && error.code !== 'PGRST116') {  // PGRST116: no rows returned
-        console.error('Error checking saved status:', error);
+      if (error && error.code !== "PGRST116") {
+        // PGRST116: no rows returned
+        console.error("Error checking saved status:", error);
         return { data: false, error };
       }
 
       return { data: !!data, error: null };
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error("Unexpected error:", error);
       return {
         data: false,
-        error: error instanceof Error ? error : new Error('Unknown error occurred'),
+        error:
+          error instanceof Error ? error : new Error("Unknown error occurred"),
       };
     }
   }
@@ -132,30 +142,32 @@ export class SavedPromotionService {
    * @param promoId 프로모션 ID
    * @returns 저장 결과
    */
-  static async savePromotion(userEmail: string, promoId: string): Promise<{
+  static async savePromotion(
+    userEmail: string,
+    promoId: string
+  ): Promise<{
     data: boolean;
     error: Error | null;
   }> {
     try {
       const supabase = await createClient();
-      const { error } = await supabase
-        .from('saved_promotions')
-        .insert({
-          user_email: userEmail,
-          promo_id: promoId,
-        });
+      const { error } = await supabase.from("saved_promotions").insert({
+        user_email: userEmail,
+        promo_id: promoId,
+      });
 
       if (error) {
-        console.error('Error saving promotion:', error);
+        console.error("Error saving promotion:", error);
         return { data: false, error };
       }
 
       return { data: true, error: null };
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error("Unexpected error:", error);
       return {
         data: false,
-        error: error instanceof Error ? error : new Error('Unknown error occurred'),
+        error:
+          error instanceof Error ? error : new Error("Unknown error occurred"),
       };
     }
   }
@@ -166,29 +178,33 @@ export class SavedPromotionService {
    * @param promoId 프로모션 ID
    * @returns 삭제 결과
    */
-  static async removePromotion(userEmail: string, promoId: string): Promise<{
+  static async removePromotion(
+    userEmail: string,
+    promoId: string
+  ): Promise<{
     data: boolean;
     error: Error | null;
   }> {
     try {
       const supabase = await createClient();
       const { error } = await supabase
-        .from('saved_promotions')
+        .from("saved_promotions")
         .delete()
-        .eq('user_email', userEmail)
-        .eq('promo_id', promoId);
+        .eq("user_email", userEmail)
+        .eq("promo_id", promoId);
 
       if (error) {
-        console.error('Error removing saved promotion:', error);
+        console.error("Error removing saved promotion:", error);
         return { data: false, error };
       }
 
       return { data: true, error: null };
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error("Unexpected error:", error);
       return {
         data: false,
-        error: error instanceof Error ? error : new Error('Unknown error occurred'),
+        error:
+          error instanceof Error ? error : new Error("Unknown error occurred"),
       };
     }
   }
@@ -199,7 +215,10 @@ export class SavedPromotionService {
    * @param promoId 프로모션 ID
    * @returns 토글 결과 (saved: true면 저장됨, false면 삭제됨)
    */
-  static async toggleSave(userEmail: string, promoId: string): Promise<{
+  static async toggleSave(
+    userEmail: string,
+    promoId: string
+  ): Promise<{
     data: { saved: boolean } | null;
     error: Error | null;
   }> {
@@ -219,10 +238,11 @@ export class SavedPromotionService {
         return { data: { saved: true }, error: null };
       }
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error("Unexpected error:", error);
       return {
         data: null,
-        error: error instanceof Error ? error : new Error('Unknown error occurred'),
+        error:
+          error instanceof Error ? error : new Error("Unknown error occurred"),
       };
     }
   }

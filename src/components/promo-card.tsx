@@ -30,6 +30,7 @@ interface PromoCardProps {
   isSaved?: boolean;
   isExpired?: boolean;
   onSaveToggle?: (promoId: string) => void;
+  priority?: boolean;
 }
 
 export default function PromoCard({
@@ -37,6 +38,7 @@ export default function PromoCard({
   isSaved = false,
   isExpired = false,
   onSaveToggle,
+  priority = false,
 }: PromoCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHearted, setIsHearted] = useState(isSaved);
@@ -81,7 +83,7 @@ export default function PromoCard({
             fill
             sizes="(max-width: 768px) 100vw, 448px"
             className={`object-contain ${isExpired ? "grayscale" : ""}`}
-            loading="lazy"
+            priority={priority}
             quality={85}
           />
           {isExpired && (

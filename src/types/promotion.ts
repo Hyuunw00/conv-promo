@@ -15,3 +15,25 @@ export interface Promotion {
   raw_title?: string;
   saved_count?: number;
 }
+
+export interface SavedPromotion {
+  promo_id: string;
+  promo: {
+    id: string;
+    title: string;
+    raw_title: string;
+    deal_type: string;
+    normal_price: number;
+    sale_price: number;
+    start_date: string;
+    end_date: string;
+    image_url: string;
+    barcode: string | null;
+    source_url: string;
+    description: string | null;
+    category: string | null;
+    brand: {
+      name: string;
+    } | null;
+  } | null;
+}

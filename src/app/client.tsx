@@ -1,9 +1,9 @@
 "use client";
 
-import HomeHeader from "@/components/layout/home-header";
+import HomeHeader from "@/components/home/home-header";
 import PromotionList from "@/components/promo-list";
 import { Promotion } from "@/types/promotion";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import ScrollToTop from "@/components/ScrollToTop";
 import { useRouter, useSearchParams } from "next/navigation";
 interface ClientProps {

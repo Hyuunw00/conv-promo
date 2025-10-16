@@ -126,9 +126,9 @@ export default function FilterBottomSheet({
                         <Image
                           src={info.logo}
                           alt={info.name}
-                          width={32}
-                          height={32}
+                          fill
                           className="object-contain"
+                          sizes="32px"
                         />
                       </div>
                     )}
@@ -147,7 +147,7 @@ export default function FilterBottomSheet({
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setTempCategory("ALL")}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 py-2 rounded-full text-base font-medium transition-all ${
                   tempCategory === "ALL"
                     ? "bg-gray-900 text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"

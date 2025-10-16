@@ -102,12 +102,13 @@ export default function PromotionList({
   return (
     <>
       <div className="space-y-3">
-        {promos.map((promo) => (
+        {promos.map((promo, index) => (
           <PromoCard
             key={promo.id}
             promotion={promo}
             isSaved={savedPromoIds.has(promo.id)}
             onSaveToggle={handleSaveToggle}
+            priority={index === 0}
           />
         ))}
       </div>
