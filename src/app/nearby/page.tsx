@@ -1,5 +1,5 @@
 import NearbyClient from "./NearbyClient";
-import ScrollToTop from "@/components/ScrollToTop";
+import ScrollToTop from "@/components/scroll-to-top";
 
 export const metadata = {
   title: "내 주변 편의점 | 편의점 프로모션",

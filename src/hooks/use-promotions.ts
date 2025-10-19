@@ -45,6 +45,7 @@ export function usePromotions({
           const response = await fetch("/api/saved/ids");
           const result = await response.json();
 
+          console.log("result", result);
           if (result.data && Array.isArray(result.data)) {
             const savedSet = new Set(result.data);
             setSavedPromoIds(savedSet as Set<string>);
