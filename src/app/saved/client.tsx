@@ -8,7 +8,7 @@ import { usePromotions } from "@/hooks/use-promotions";
 import { Promotion } from "@/types/promotion";
 import { toast } from "sonner";
 import FilterBottomSheet from "@/components/filter-botton-sheet";
-import { fetchSavedPromotions } from "@/lib/api/saved.api";
+import { fetchSavedPromotions } from "@/lib/saved";
 import SavedHeader from "@/components/saved/saved-header";
 import PromoCard from "@/components/promo-card";
 

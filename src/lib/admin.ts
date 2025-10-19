@@ -1,33 +1,38 @@
-import { createClient } from '@/lib/supabase/server';
+"use client";
+
+import { createClient } from "@/lib/supabase/client";
 
 /**
- * 사용자가 admin 권한을 가지고 있는지 확인
+ * 현재 사용자가 관리자인지 확인
+ * @returns 관리자 여부
  */
-export async function isAdmin(userEmail: string | null | undefined): Promise<boolean> {
-  if (!userEmail) return false;
+export async function checkIsAdmin(): Promise<boolean> {
+  try {
+    const supabase = createClient();
 
-  const supabase = await createClient();
+    // 현재 사용자 확인
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_email', userEmail)
-    .single();
+    if (!user?.email) {
+      return false;
+    }
 
-  if (error || !data) return false;
+    // user_roles 테이블에서 권한 확인
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_email", user.email)
+      .single();
 
-  return data.role === 'admin';
-}
+    if (error || !data) {
+      return false;
+    }
 
-/**
- * admin 권한 체크 (없으면 에러)
- */
-export async function requireAdmin(userEmail: string | null | undefined) {
-  const hasPermission = await isAdmin(userEmail);
-
-  if (!hasPermission) {
-    throw new Error('관리자 권한이 필요합니다');
+    return data.role === "admin";
+  } catch (error) {
+    console.error("Admin check error:", error);
+    return false;
   }
-
-  return true;
 }

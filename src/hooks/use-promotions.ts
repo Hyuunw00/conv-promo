@@ -3,6 +3,7 @@ import { Promotion } from "@/types/promotion";
 import { getCurrentUser } from "@/lib/auth";
 import { toggleSavePromo } from "@/app/actions/saved-actions";
 import { User } from "@supabase/supabase-js";
+import { fetchSavedPromoIds } from "@/lib/saved";
 
 interface UsePromotionsOptions {
   initialData?: Promotion[];
@@ -42,14 +43,9 @@ export function usePromotions({
         setUser(currentUser);
 
         if (currentUser?.email) {
-          const response = await fetch("/api/saved/ids");
-          const result = await response.json();
-
-          console.log("result", result);
-          if (result.data && Array.isArray(result.data)) {
-            const savedSet = new Set(result.data);
-            setSavedPromoIds(savedSet as Set<string>);
-          }
+          const data = await fetchSavedPromoIds(currentUser.email);
+          const savedSet = new Set(data);
+          setSavedPromoIds(savedSet as Set<string>);
         }
       } catch (error) {
         console.error("Error fetching saved promo ids:", error);

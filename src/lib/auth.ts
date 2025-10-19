@@ -43,6 +43,41 @@ export const signInWithKakao = async () => {
 // 회원 탈퇴
 export const deleteAccount = async () => {
   try {
+    const supabase = createClient();
+
+    // 현재 사용자 확인
+    const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+
+    if (getUserError || !user) {
+      return { error: new Error('사용자를 찾을 수 없습니다') };
+    }
+
+    // 저장된 프로모션 삭제
+    if (user.email) {
+      const { error: deletePromoError } = await supabase
+        .from('saved_promotions')
+        .delete()
+        .eq('user_email', user.email);
+
+      if (deletePromoError) {
+        console.error('Error deleting saved promotions:', deletePromoError);
+      }
+    }
+
+    // Push 구독 삭제
+    if (user.email) {
+      const { error: deletePushError } = await supabase
+        .from('push_subscriptions')
+        .delete()
+        .eq('user_email', user.email);
+
+      if (deletePushError) {
+        console.error('Error deleting push subscriptions:', deletePushError);
+      }
+    }
+
+    // 사용자 삭제는 RPC 함수 호출 (Supabase에서 설정 필요)
+    // 또는 서버 액션으로 처리해야 함 (Admin API 필요)
     const response = await fetch('/api/auth/delete-account', {
       method: 'DELETE',
     });

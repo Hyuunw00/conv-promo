@@ -109,17 +109,38 @@ export async function unsubscribeFromPush(): Promise<boolean> {
  * 구독 정보를 서버에 저장
  */
 export async function saveSubscription(subscription: PushSubscription): Promise<void> {
-  const response = await fetch('/api/notifications/subscribe', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(subscription),
+  const { createClient } = await import('@/lib/supabase/client');
+  const supabase = createClient();
+
+  // 현재 사용자 확인
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const subscriptionData = subscription.toJSON();
+
+  if (!subscriptionData.endpoint || !subscriptionData.keys) {
+    throw new Error('유효하지 않은 구독 정보입니다');
+  }
+
+  // 기존 구독 삭제
+  if (user?.email) {
+    await supabase
+      .from('push_subscriptions')
+      .delete()
+      .eq('user_email', user.email);
+  }
+
+  // DB에 저장
+  const { error } = await supabase.from('push_subscriptions').insert({
+    endpoint: subscriptionData.endpoint,
+    p256dh: subscriptionData.keys.p256dh,
+    auth: subscriptionData.keys.auth,
+    user_email: user?.email || null,
+    updated_at: new Date().toISOString(),
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || '구독 저장에 실패했습니다');
+  if (error) {
+    console.error('Save subscription error:', error);
+    throw new Error('구독 저장에 실패했습니다');
   }
 }
 
@@ -127,16 +148,21 @@ export async function saveSubscription(subscription: PushSubscription): Promise<
  * 구독 정보를 서버에서 삭제
  */
 export async function deleteSubscription(subscription: PushSubscription): Promise<void> {
-  const response = await fetch('/api/notifications/unsubscribe', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ endpoint: subscription.endpoint }),
-  });
+  const { createClient } = await import('@/lib/supabase/client');
+  const supabase = createClient();
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || '구독 삭제에 실패했습니다');
+  if (!subscription.endpoint) {
+    throw new Error('endpoint가 필요합니다');
+  }
+
+  // DB에서 삭제
+  const { error } = await supabase
+    .from('push_subscriptions')
+    .delete()
+    .eq('endpoint', subscription.endpoint);
+
+  if (error) {
+    console.error('Delete subscription error:', error);
+    throw new Error('구독 삭제에 실패했습니다');
   }
 }

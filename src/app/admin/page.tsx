@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, Bell, Settings, Shield } from "lucide-react";
 import Link from "next/link";
 import Loading from "@/components/Loading";
+import { checkIsAdmin } from "@/lib/admin";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -25,15 +26,14 @@ export default function AdminPage() {
       if (!user?.email) return;
 
       try {
-        const response = await fetch("/api/admin/check");
-        const data = await response.json();
+        const adminStatus = await checkIsAdmin();
 
-        if (!data.isAdmin) {
+        if (!adminStatus) {
           router.push("/");
           return;
         }
 
-        setIsAdmin(data.isAdmin);
+        setIsAdmin(adminStatus);
       } catch (error) {
         console.error("Admin check error:", error);
         router.push("/");

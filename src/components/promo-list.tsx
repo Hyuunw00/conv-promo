@@ -5,6 +5,7 @@ import PromoCard from "@/components/promo-card";
 import Loading from "@/components/Loading";
 import { Promotion } from "@/types/promotion";
 import { toast } from "sonner";
+import { fetchPromotions } from "@/lib/promotions";
 
 interface PromotionListProps {
   initialData: Promotion[];
@@ -23,20 +24,24 @@ export default function PromotionList({
   filters,
 }: PromotionListProps) {
   const fetchData = async (page: number) => {
-    const params = new URLSearchParams();
-    if (filters.brandName) params.append("brandName", filters.brandName);
-    if (filters.dealType) params.append("dealType", filters.dealType);
-    if (filters.category) params.append("category", filters.category);
-    if (filters.startDate) params.append("startDate", filters.startDate);
-    if (filters.endDate) params.append("endDate", filters.endDate);
-    if (filters.orderBy) params.append("orderBy", filters.orderBy);
-    params.append("offset", String(page * 20));
+    const result = await fetchPromotions({
+      brandName: filters.brandName || undefined,
+      dealType: filters.dealType || undefined,
+      category: filters.category || undefined,
+      startDate: filters.startDate || undefined,
+      endDate: filters.endDate || undefined,
+      orderBy: filters.orderBy as
+        | "start_date"
+        | "end_date"
+        | "created_at"
+        | "saved_count"
+        | undefined,
+      offset: page * 20,
+      limit: 20,
+    });
 
-    const response = await fetch(`/api/promotions?${params}`);
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.error || "Failed to fetch promotions");
+    if (result.error) {
+      throw new Error(result.error);
     }
 
     return {
