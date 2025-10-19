@@ -9,7 +9,7 @@ import {
   fetchSearchResults,
   fetchSearchSuggestions,
   fetchComparisonData,
-} from "@/lib/api/search.api";
+} from "@/lib/search";
 
 interface SearchContentProps {
   onClose?: () => void;

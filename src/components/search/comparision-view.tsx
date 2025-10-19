@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import Image from "next/image";
 
 interface ComparisonViewProps {
   query: string;
@@ -185,11 +186,15 @@ export default function ComparisonView({
               <div className="flex items-center gap-3">
                 {/* 이미지 */}
                 {promo.image_url && (
-                  <img
-                    src={promo.image_url}
-                    alt={promo.title}
-                    className="w-16 h-16 object-contain rounded flex-shrink-0"
-                  />
+                  <div className="w-16 h-16 relative flex-shrink-0">
+                    <Image
+                      src={promo.image_url}
+                      alt={promo.title}
+                      fill
+                      className="object-contain rounded"
+                      sizes="64px"
+                    />
+                  </div>
                 )}
 
                 {/* 브랜드 정보 */}
