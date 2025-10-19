@@ -50,7 +50,7 @@ export default function LoginPage() {
               alt="편털 로고"
               width={128}
               height={128}
-              className="object-contain"
+              className="object-contain rounded-3xl"
               priority
             />
           </div>
