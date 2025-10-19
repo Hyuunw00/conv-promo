@@ -1,4 +1,4 @@
-import NearbyClient from "./NearbyClient";
+import NearbyClient from "./client";
 import ScrollToTop from "@/components/scroll-to-top";
 
 export const metadata = {

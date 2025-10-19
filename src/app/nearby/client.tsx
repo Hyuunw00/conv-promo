@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Store, BrandType, BRAND_COLORS, BRAND_LABELS } from "@/types/store";
 import { toast } from "sonner";
+import { calculateDistance, formatDistance } from "@/utils/distance";
+import { BRAND_LOGOS } from "@/constants/maps";
 
 export default function NearbyClient() {
   const router = useRouter();
@@ -113,39 +115,25 @@ export default function NearbyClient() {
 
       // 거리를 사용자 실제 위치 기준으로 재계산
       const storesWithDistance = userLocation
-        ? data.stores.map((store: Store) => {
-            const R = 6371e3; // 지구 반지름 (미터)
-            const φ1 = (userLocation.latitude * Math.PI) / 180;
-            const φ2 = (store.latitude * Math.PI) / 180;
-            const Δφ =
-              ((store.latitude - userLocation.latitude) * Math.PI) / 180;
-            const Δλ =
-              ((store.longitude - userLocation.longitude) * Math.PI) / 180;
-
-            const a =
-              Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-              Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            const distance = Math.round(R * c);
-
-            return { ...store, distance };
-          })
+        ? data.stores.map((store: Store) => ({
+            ...store,
+            distance: calculateDistance(
+              userLocation.latitude,
+              userLocation.longitude,
+              store.latitude,
+              store.longitude
+            ),
+          }))
         : data.stores;
 
       // 지도 중심에서 반경 내의 편의점만 필터링
       const filteredStores = storesWithDistance.filter((store: Store) => {
-        // 지도 중심과 편의점 사이의 거리 계산
-        const R = 6371e3;
-        const φ1 = (mapCenter.latitude * Math.PI) / 180;
-        const φ2 = (store.latitude * Math.PI) / 180;
-        const Δφ = ((store.latitude - mapCenter.latitude) * Math.PI) / 180;
-        const Δλ = ((store.longitude - mapCenter.longitude) * Math.PI) / 180;
-
-        const a =
-          Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-          Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distanceFromCenter = Math.round(R * c);
+        const distanceFromCenter = calculateDistance(
+          mapCenter.latitude,
+          mapCenter.longitude,
+          store.latitude,
+          store.longitude
+        );
 
         // 현재 선택된 반경 내의 편의점만 포함
         return distanceFromCenter <= radius;
@@ -158,7 +146,7 @@ export default function NearbyClient() {
     } finally {
       setLoading(false);
     }
-  }, [mapCenter, selectedBrand, radius]); // radius 추가하여 반경 변경 시 재필터링
+  }, [mapCenter, selectedBrand, radius, userLocation]);
 
   // 지도 중심 또는 브랜드 변경 시 편의점 검색
   useEffect(() => {
@@ -269,14 +257,6 @@ export default function NearbyClient() {
         store.longitude
       );
 
-      // 브랜드별 로고 이미지 경로
-      const brandLogos: Record<BrandType, string> = {
-        GS25: "/brands/gs25.webp",
-        CU: "/brands/cu.svg",
-        SevenEleven: "/brands/seveneleven.png",
-        Emart24: "/brands/emart24.webp",
-      };
-
       // 커스텀 마커 (로고 이미지)
       const marker = new naver.maps.Marker({
         position: markerPosition,
@@ -295,7 +275,7 @@ export default function NearbyClient() {
             overflow: hidden;
             padding: 2px;
           ">
-            <img src="${brandLogos[store.brand]}" alt="${
+            <img src="${BRAND_LOGOS[store.brand]}" alt="${
             BRAND_LABELS[store.brand]
           }" style="width: 100%; height: 100%; object-fit: contain;" />
           </div>`,
@@ -322,14 +302,6 @@ export default function NearbyClient() {
     setMarkers(newMarkers);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, userLocation, stores]); // markers 제거 - 무한 루프 방지
-
-  // 거리 포맷팅
-  const formatDistance = (distance: number) => {
-    if (distance < 1000) {
-      return `${distance}m`;
-    }
-    return `${(distance / 1000).toFixed(1)}km`;
-  };
 
   // 길찾기 (네이버 지도)
   const handleNavigation = (store: Store) => {
