@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SavedPromotionService } from "@/services/saved/saved.service";
 import SavedPageClient from "./client";
-import ScrollToTop from "@/components/ScrollToTop";
+import ScrollToTop from "@/components/scroll-to-top";
 
 export default async function SavedPage() {
   const supabase = await createClient();

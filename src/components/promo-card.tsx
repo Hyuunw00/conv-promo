@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 import { Promotion } from "@/types/promotion";
 import { fmtDate } from "@/utils/date";
-import BrandBadge from "./BrandBadge";
-import DealBadge from "./DealBadge";
+import BrandBadge from "./brand-badge";
+import DealBadge from "./deal-badge";
 import Image from "next/image";
 
 interface PromoCardProps {
