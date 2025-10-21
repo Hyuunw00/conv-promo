@@ -212,12 +212,12 @@ export default function PromoCard({
               </a>
             )}
 
-            <div className="flex flex-wrap gap-2 mt-2">
+            {/* <div className="flex flex-wrap gap-2 mt-2">
               <span className="text-xs text-gray-400">
                 <Tag className="inline w-3 h-3 mr-1" />
                 ID: {promotion.id.slice(0, 8)}
               </span>
-            </div>
+            </div> */}
           </div>
         )}
       </div>

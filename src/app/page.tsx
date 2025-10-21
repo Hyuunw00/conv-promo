@@ -3,8 +3,12 @@ import { getKSTDateString, toKST } from "@/utils/date";
 import Client from "./client";
 
 export const metadata = {
-  title: "편의점 프로모션 - 전국 편의점 행사 한눈에",
-  description: "GS25, CU, 세븐일레븐, 이마트24 프로모션을 한 곳에서",
+  title: "홈",
+  description:
+    "이번 달 편의점 프로모션을 확인하세요. 1+1, 2+1, 할인 행사 정보를 실시간으로 제공합니다.",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 interface HomeProps {
@@ -15,18 +19,7 @@ interface HomeProps {
     sort?: string;
   }>;
 }
-
-async function getInitialData() {
-  const { data: initialData } = await PromotionService.fetchPromotions({
-    brandName: "ALL",
-    dealType: "ALL",
-    category: "ALL",
-    startDate: "ALL",
-    endDate: "ALL",
-  });
-}
-
-export default async function Home({ searchParams }: HomeProps) {
+export default async function HomePage({ searchParams }: HomeProps) {
   const params = await searchParams;
 
   // URL에서 필터 값 가져오기
@@ -36,12 +29,15 @@ export default async function Home({ searchParams }: HomeProps) {
   const sort = params.sort || "saved";
 
   const today = toKST(new Date());
-  const defaultEndDate = new Date(today);
-  // default: 14일 후 기간
-  defaultEndDate.setDate(today.getDate() + 14);
 
-  const startDate = getKSTDateString(today);
-  const endDate = getKSTDateString(defaultEndDate);
+  // 이번 달 1일
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  // 이번 달 마지막 날
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+  const startDate = getKSTDateString(startOfMonth);
+  const endDate = getKSTDateString(endOfMonth);
 
   const orderBy = sort === "saved" ? "saved_count" : "start_date";
   const ascending = false; // 둘 다 내림차순 (saved_count 큰순, start_date 큰순)
