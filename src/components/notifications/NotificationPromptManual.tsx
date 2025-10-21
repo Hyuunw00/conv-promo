@@ -160,7 +160,7 @@ export default function NotificationPromptManual({
           <button
             onClick={isSubscribed ? handleDisable : handleEnable}
             disabled={isLoading}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 ${
+            className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 whitespace-nowrap ${
               isSubscribed
                 ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 : "bg-blue-600 text-white hover:bg-blue-700"
@@ -169,12 +169,12 @@ export default function NotificationPromptManual({
             {isLoading ? "처리중..." : isSubscribed ? "비활성화" : "활성화"}
           </button>
         ) : permission === "denied" ? (
-          <div className="text-sm text-red-600">권한 거부됨</div>
+          <div className="text-sm text-red-600 whitespace-nowrap">권한 거부됨</div>
         ) : (
           <button
             onClick={handleEnable}
             disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             {isLoading ? "처리중..." : "허용"}
           </button>
