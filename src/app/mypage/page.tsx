@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { signOut, deleteAccount } from "@/lib/auth";
 import { checkIsAdmin } from "@/lib/admin";
 import { toast } from "sonner";
-import NotificationPermission from "@/components/notifications/NotificationPermission";
+import NotificationPromptManual from "@/components/notifications/NotificationPromptManual";
 import Loading from "@/components/Loading";
 import Link from "next/link";
 import Image from "next/image";
@@ -205,7 +205,7 @@ export default function MyPage() {
 
       {/* 알림 설정 섹션 */}
       <div className="px-4 mt-4">
-        <NotificationPermission />
+        <NotificationPromptManual />
       </div>
 
       {/* 회원 탈퇴 버튼 */}

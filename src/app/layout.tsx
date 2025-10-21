@@ -1,6 +1,8 @@
 import "@/styles/global.css";
 import BottomNavigation from "@/components/layout/BottomNavigation";
-import PWAInstallPrompt from "@/components/notifications/PWAInstallPrompt";
+import NotificationPromptAuto from "@/components/notifications/NotificationPromptAuto";
+import AppInstallBanner from "@/components/notifications/AppInstallBanner";
+import SplashScreen from "@/components/splash-screen";
 import Script from "next/script";
 import { Toaster } from "sonner";
 import type { Metadata } from "next";
@@ -134,10 +136,12 @@ export default function RootLayout({
         />
 
         <div className="min-h-screen bg-gray-50 max-w-md mx-auto relative">
+          <SplashScreen />
           {children}
           {modal}
           <BottomNavigation />
-          <PWAInstallPrompt />
+          <AppInstallBanner />
+          <NotificationPromptAuto />
           <Toaster position="top-center" />
         </div>
         {process.env.NODE_ENV === "development" && (

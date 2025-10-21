@@ -12,9 +12,9 @@ import {
 } from "@/lib/notifications";
 
 /**
- * PWA 설치 후 알림 권한 요청 모달
+ * PWA 설치 후 알림 권한 요청 모달 (자동)
  */
-export default function PWAInstallPrompt() {
+export default function NotificationPromptAuto() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 

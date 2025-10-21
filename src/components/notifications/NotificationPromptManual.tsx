@@ -13,13 +13,16 @@ import {
   deleteSubscription,
 } from "@/lib/notifications";
 
-interface NotificationPermissionProps {
+interface NotificationPromptManualProps {
   className?: string;
 }
 
-export default function NotificationPermission({
+/**
+ * 알림 권한 수동 설정 컴포넌트 (마이페이지)
+ */
+export default function NotificationPromptManual({
   className,
-}: NotificationPermissionProps) {
+}: NotificationPromptManualProps) {
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] =
     useState<NotificationPermission>("default");
