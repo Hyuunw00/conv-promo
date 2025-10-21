@@ -122,11 +122,11 @@ export async function saveSubscription(subscription: PushSubscription): Promise<
   }
 
   // 기존 구독 삭제
-  if (user?.email) {
+  if (user?.id) {
     await supabase
       .from('push_subscriptions')
       .delete()
-      .eq('user_email', user.email);
+      .eq('user_id', user.id);
   }
 
   // DB에 저장
@@ -134,6 +134,7 @@ export async function saveSubscription(subscription: PushSubscription): Promise<
     endpoint: subscriptionData.endpoint,
     p256dh: subscriptionData.keys.p256dh,
     auth: subscriptionData.keys.auth,
+    user_id: user?.id || null,
     user_email: user?.email || null,
     updated_at: new Date().toISOString(),
   });

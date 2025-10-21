@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { BrandType, BRAND_KEYWORDS, Store } from "@/types/store";
-
-const NAVER_API_URL = "https://openapi.naver.com/v1/search/local.json";
-const NAVER_REVERSE_GEOCODE_URL =
-  "https://maps.apigw.ntruss.com/map-reversegeocode/v2/gc";
+import { NAVER_API } from "@/constants/api";
 
 interface NaverPlace {
   title: string;
@@ -64,7 +61,7 @@ async function getAddressFromCoords(
   clientSecret: string
 ): Promise<string | null> {
   try {
-    const url = `${NAVER_REVERSE_GEOCODE_URL}?coords=${lon},${lat}&output=json&orders=addr`;
+    const url = `${NAVER_API.REVERSE_GEOCODE}?coords=${lon},${lat}&output=json&orders=addr`;
 
     console.log("🔍 Reverse Geocoding URL:", url);
     console.log("🔑 Using NCP Client ID:", clientId?.substring(0, 10) + "...");
@@ -180,7 +177,7 @@ export async function GET(request: Request) {
         // 더 많은 결과를 가져와서 거리로 필터링 (지역명 없을 때)
         const displayCount = locationName ? 50 : 100;
 
-        const url = `${NAVER_API_URL}?query=${encodeURIComponent(
+        const url = `${NAVER_API.SEARCH_LOCAL}?query=${encodeURIComponent(
           searchQuery
         )}&display=${displayCount}&sort=random`;
 

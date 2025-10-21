@@ -1,11 +1,5 @@
 import { NextResponse } from "next/server";
-
-// 네이버 검색 API (지명, 랜드마크 검색)
-const NAVER_SEARCH_URL = "https://openapi.naver.com/v1/search/local.json";
-
-// NCP Geocoding API (주소 검색)
-const NAVER_GEOCODING_URL =
-  "https://maps.apigw.ntruss.com/map-geocode/v2/geocode";
+import { NAVER_API } from "@/constants/api";
 
 interface NaverPlace {
   title: string;
@@ -82,7 +76,7 @@ export async function GET(request: Request) {
     console.log("🔍 Geocoding request:", query);
 
     // 1. 먼저 네이버 검색 API로 시도 (지명, 랜드마크)
-    const searchUrl = `${NAVER_SEARCH_URL}?query=${encodeURIComponent(
+    const searchUrl = `${NAVER_API.SEARCH_LOCAL}?query=${encodeURIComponent(
       query
     )}&display=1`;
 
@@ -118,7 +112,7 @@ export async function GET(request: Request) {
     // 2. 검색 API에서 결과가 없으면 Geocoding API로 시도 (주소)
     console.log("🔍 Trying Geocoding API for address...");
 
-    const geocodeUrl = `${NAVER_GEOCODING_URL}?query=${encodeURIComponent(
+    const geocodeUrl = `${NAVER_API.GEOCODE}?query=${encodeURIComponent(
       query
     )}`;
 

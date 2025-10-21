@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { NAVER_API } from "@/constants/api";
 
 /**
  * Naver Local Search API - 지역 검색 (자동완성용)
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const naverResponse = await fetch(
-      `https://openapi.naver.com/v1/search/local.json?query=${encodeURIComponent(
+      `${NAVER_API.SEARCH_LOCAL}?query=${encodeURIComponent(
         query
       )}&display=5&sort=random`,
       {

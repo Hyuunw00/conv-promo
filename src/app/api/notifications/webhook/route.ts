@@ -4,7 +4,7 @@ import webpush from "web-push";
 
 // VAPID 설정
 webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || "mailto:example@example.com",
+  process.env.VAPID_SUBJECT || "mailto:khwland090@gmail.com",
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
 );

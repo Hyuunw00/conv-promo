@@ -185,7 +185,7 @@ jobs:
             exit 0
           fi
 
-          curl -X POST "$BASE_URL/api/webhooks/crawler" \
+          curl -X POST "$BASE_URL/api/notifications/webhook" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $WEBHOOK_SECRET" \
             -d "{\"results\": $RESULTS}" \
