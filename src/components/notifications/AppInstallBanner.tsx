@@ -18,53 +18,71 @@ export default function AppInstallBanner() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
+    console.log("[AppInstallBanner] 컴포넌트 마운트됨");
+
     // iOS 감지
     const userAgent = window.navigator.userAgent.toLowerCase();
     const ios = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(ios);
+    console.log("[AppInstallBanner] iOS 여부:", ios);
 
     // 이미 설치되었는지 확인
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone ||
+      ("standalone" in window.navigator &&
+        (window.navigator as { standalone?: boolean }).standalone) ||
       document.referrer.includes("android-app://");
+    console.log("[AppInstallBanner] 이미 설치됨:", isStandalone);
 
     if (isStandalone) {
+      console.log("[AppInstallBanner] 이미 설치되어 있어서 종료");
       return; // 이미 설치된 경우 프롬프트 표시 안 함
     }
 
     // 이전에 닫은 적이 있는지 확인 (24시간 동안 다시 표시 안 함)
     const dismissedAt = localStorage.getItem("installPromptDismissedAt");
+    console.log("[AppInstallBanner] 이전 닫은 시간:", dismissedAt);
     if (dismissedAt) {
       const dismissedTime = parseInt(dismissedAt, 10);
-      const hoursSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60);
+      const hoursSinceDismissed =
+        (Date.now() - dismissedTime) / (1000 * 60 * 60);
+      console.log("[AppInstallBanner] 경과 시간(시간):", hoursSinceDismissed);
       if (hoursSinceDismissed < 24) {
+        console.log("[AppInstallBanner] 24시간 이내라서 종료");
         return;
       }
     }
 
     // Android/Desktop: beforeinstallprompt 이벤트 처리
     const handleBeforeInstallPrompt = (e: Event) => {
+      console.log("[AppInstallBanner] beforeinstallprompt 이벤트 발생!");
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
 
       // 약간의 딜레이 후 프롬프트 표시 (UX 개선)
       setTimeout(() => {
+        console.log("[AppInstallBanner] 배너 표시 (Android/Desktop)");
         setShowPrompt(true);
       }, 3000);
     };
 
+    console.log("[AppInstallBanner] beforeinstallprompt 이벤트 리스너 등록");
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
     // iOS: 안내 표시 (24시간 제한 이미 체크됨)
     if (ios) {
+      console.log("[AppInstallBanner] iOS 모달 3초 후 표시 예약");
       setTimeout(() => {
+        console.log("[AppInstallBanner] iOS 모달 표시");
         setShowPrompt(true);
       }, 3000);
     }
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt
+      );
     };
   }, []);
 
@@ -101,7 +119,10 @@ export default function AppInstallBanner() {
     return (
       <>
         {/* 오버레이 */}
-        <div className="fixed inset-0 z-[70] bg-black/40" onClick={handleDismiss} />
+        <div
+          className="fixed inset-0 z-[70] bg-black/40"
+          onClick={handleDismiss}
+        />
 
         {/* 모달 */}
         <div className="fixed bottom-0 left-0 right-0 z-[70] bg-white rounded-t-3xl shadow-2xl p-6 animate-slide-up">
@@ -133,11 +154,14 @@ export default function AppInstallBanner() {
             </p>
             <ol className="list-decimal list-inside space-y-1 text-left bg-gray-50 rounded-xl p-4">
               <li>
-                하단의 <span className="font-semibold">공유 버튼</span>을 탭하세요
+                하단의 <span className="font-semibold">공유 버튼</span>을
+                탭하세요
               </li>
               <li>
-                <span className="font-semibold">&quot;홈 화면에 추가&quot;</span>를
-                선택하세요
+                <span className="font-semibold">
+                  &quot;홈 화면에 추가&quot;
+                </span>
+                를 선택하세요
               </li>
               <li>오른쪽 상단의 &quot;추가&quot;를 탭하세요</li>
             </ol>
