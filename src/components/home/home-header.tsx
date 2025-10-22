@@ -72,7 +72,7 @@ export default function HomeHeader({
   ].filter(Boolean).length;
 
   return (
-    <header className="sticky top-0 z-40 bg-white shadow-sm">
+    <header className="sticky top-0 z-40 bg-white shadow-sm pt-safe">
       <div className="px-3 py-3">
         <div className="flex items-center justify-between">
           {/* 로고 */}

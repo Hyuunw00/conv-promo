@@ -123,7 +123,7 @@ export default function SearchContent({ onClose }: SearchContentProps) {
               onChange={(e) => handleInputChange(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch(searchQuery)}
               placeholder="상품명, 브랜드 검색"
-              className="w-full px-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-gray-100 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
             />
             {searchQuery && (

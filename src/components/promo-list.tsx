@@ -6,6 +6,7 @@ import Loading from "@/components/Loading";
 import { Promotion } from "@/types/promotion";
 import { toast } from "sonner";
 import { fetchPromotions } from "@/lib/promotions";
+import { useEffect } from "react";
 
 interface PromotionListProps {
   initialData: Promotion[];
@@ -59,10 +60,46 @@ export default function PromotionList({
     savedPromoIds,
     handleSaveToggle: onSaveToggle,
     loadMoreRef,
+    resetData,
   } = usePromotions({
     initialData,
     fetchData,
   });
+
+  // 필터 변경 시 데이터 리셋 및 리페치
+  useEffect(() => {
+    const refetchData = async () => {
+      const result = await fetchPromotions({
+        brandName: filters.brandName || undefined,
+        dealType: filters.dealType || undefined,
+        category: filters.category || undefined,
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
+        orderBy: filters.orderBy as
+          | "start_date"
+          | "end_date"
+          | "created_at"
+          | "saved_count"
+          | undefined,
+        offset: 0,
+        limit: 20,
+      });
+
+      if (!result.error && result.data) {
+        resetData(result.data);
+      }
+    };
+
+    refetchData();
+  }, [
+    filters.brandName,
+    filters.category,
+    filters.dealType,
+    filters.startDate,
+    filters.endDate,
+    filters.orderBy,
+    resetData,
+  ]);
 
   const handleSaveToggle = async (promoId: string) => {
     const result = await onSaveToggle(promoId);

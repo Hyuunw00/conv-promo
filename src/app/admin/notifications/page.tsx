@@ -72,7 +72,7 @@ export default function AdminNotificationsPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* 헤더 */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 pt-safe">
         <div className="px-4 py-4">
           <div className="flex items-center gap-3">
             <Link

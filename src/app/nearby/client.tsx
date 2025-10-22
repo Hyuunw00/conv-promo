@@ -443,7 +443,7 @@ export default function NearbyClient() {
   if (locationError) {
     return (
       <>
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+        <header className="sticky top-0 z-50 bg-white border-b border-gray-200 pt-safe">
           <div className="px-4 py-3">
             <div className="flex items-center gap-3">
               <Link
@@ -484,7 +484,7 @@ export default function NearbyClient() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 pt-safe">
         <div className="px-4 py-3">
           <div className="flex items-center gap-3">
             <Link
@@ -513,7 +513,7 @@ export default function NearbyClient() {
                 onFocus={() => setShowSuggestions(suggestions.length > 0)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 placeholder="지역/주소 검색 (예: 부산대, 강남역)"
-                className="w-full pl-3 pr-24 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-3 pr-24 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={isSearching}
               />
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
