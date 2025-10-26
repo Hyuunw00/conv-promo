@@ -2,7 +2,7 @@
 
 /* iOS Safe Area 지원 */
 .pt-safe {
-  padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  padding-top: max(env(safe-area-inset-top), 0.75rem);
 }
 
 /* .pb-safe {
