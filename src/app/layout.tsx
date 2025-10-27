@@ -133,6 +133,7 @@ export default function RootLayout({
         />
 
         <div className="min-h-screen bg-gray-50 max-w-md mx-auto relative">
+          <div className="statusbar-overlay" />
           <SplashScreen />
           {children}
           {modal}

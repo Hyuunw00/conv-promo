@@ -6,6 +6,30 @@ html {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
+/* iOS 상태바 Blur Overlay */
+.statusbar-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: -80px;
+  height: 80px;
+  overflow: hidden;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.statusbar-overlay::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 150%;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
 /* iOS Safe Area 지원 */
 .pt-safe {
   padding-top: max(env(safe-area-inset-top), 0.75rem);
