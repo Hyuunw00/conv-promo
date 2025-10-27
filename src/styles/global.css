@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* iOS Safe Area 전역 적용 */
+html {
+  min-height: calc(100% + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
 /* iOS Safe Area 지원 */
 .pt-safe {
   padding-top: max(env(safe-area-inset-top), 0.75rem);

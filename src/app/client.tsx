@@ -190,7 +190,7 @@ export default function Client({
       />
 
       {/* 메인 콘텐츠 */}
-      <main className="px-3 pb-16 pt-safe">
+      <main className="px-3 pb-16">
         <PromotionList
           initialData={initialData}
           filters={{
