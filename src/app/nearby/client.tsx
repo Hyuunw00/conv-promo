@@ -443,7 +443,7 @@ export default function NearbyClient() {
   if (locationError) {
     return (
       <>
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-200 pt-safe">
+        <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
           <div className="px-4 py-3">
             <div className="flex items-center gap-3">
               <Link
@@ -484,7 +484,7 @@ export default function NearbyClient() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 pt-safe">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="px-4 py-3">
           <div className="flex items-center gap-3">
             <Link
