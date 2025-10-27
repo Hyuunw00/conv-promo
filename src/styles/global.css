@@ -25,7 +25,9 @@ html {
   right: 0;
   top: 0;
   height: 150%;
-  background-color: #ffffff;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  background-color: rgb(255, 255, 255);
 }
 
 
