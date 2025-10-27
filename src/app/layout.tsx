@@ -135,7 +135,7 @@ export default function RootLayout({
           }}
         />
 
-        <div className="min-h-screen bg-gray-50 max-w-md mx-auto relative pt-safe">
+        <div className="min-h-screen bg-gray-50 max-w-md mx-auto relative">
           <SplashScreen />
           {children}
           {modal}
