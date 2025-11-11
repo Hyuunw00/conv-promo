@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, Bell, Settings, Shield } from "lucide-react";
 import Link from "next/link";
-import Loading from "@/components/Loading";
+import Loading from "@/components/loading";
 import { checkIsAdmin } from "@/lib/admin";
 
 export default function AdminPage() {

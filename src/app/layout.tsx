@@ -1,7 +1,7 @@
 import "@/styles/global.css";
-import BottomNavigation from "@/components/layout/BottomNavigation";
-import NotificationPromptAuto from "@/components/notifications/NotificationPromptAuto";
-import AppInstallBanner from "@/components/notifications/AppInstallBanner";
+import BottomNavigation from "@/components/layout/bottom-navigation";
+import NotificationPromptAuto from "@/components/notifications/notification-prompt-auto";
+import AppInstallBanner from "@/components/notifications/app-install-banner";
 import SplashScreen from "@/components/splash-screen";
 import Script from "next/script";
 import { Toaster } from "sonner";

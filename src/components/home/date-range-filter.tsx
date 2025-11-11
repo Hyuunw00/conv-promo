@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import Calendar from "@/components/Calendar";
+import Calendar from "@/components/calendar";
 
 interface DateRangeFilterProps {
   initialStartDate: string;

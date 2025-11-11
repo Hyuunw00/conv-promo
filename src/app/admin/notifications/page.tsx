@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Send, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import Loading from "@/components/Loading";
+import Loading from "@/components/loading";
 
 export default function AdminNotificationsPage() {
   const router = useRouter();

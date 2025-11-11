@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { Heart } from "lucide-react";
 import Link from "next/link";
-import Loading from "@/components/Loading";
+import Loading from "@/components/loading";
 import { usePromotions } from "@/hooks/use-promotions";
 import { Promotion } from "@/types/promotion";
 import { toast } from "sonner";

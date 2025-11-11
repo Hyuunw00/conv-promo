@@ -6,8 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { signOut, deleteAccount } from "@/lib/auth";
 import { checkIsAdmin } from "@/lib/admin";
 import { toast } from "sonner";
-import NotificationPromptManual from "@/components/notifications/NotificationPromptManual";
-import Loading from "@/components/Loading";
+import NotificationPromptManual from "@/components/notifications/notification-prompt-manual";
+import Loading from "@/components/loading";
 import Link from "next/link";
 import Image from "next/image";
 import {
