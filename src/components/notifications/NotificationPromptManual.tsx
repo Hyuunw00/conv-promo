@@ -150,7 +150,7 @@ export default function NotificationPromptManual({
             <p className="font-medium text-gray-900">푸시 알림</p>
             <p className="text-sm text-gray-500">
               {isSubscribed
-                ? "새로운 프로모션 알림을 받고 있습니다"
+                ? "프로모션 알림을 받습니다"
                 : "프로모션 알림을 받아보세요"}
             </p>
           </div>
@@ -169,7 +169,9 @@ export default function NotificationPromptManual({
             {isLoading ? "처리중..." : isSubscribed ? "비활성화" : "활성화"}
           </button>
         ) : permission === "denied" ? (
-          <div className="text-sm text-red-600 whitespace-nowrap">권한 거부됨</div>
+          <div className="text-sm text-red-600 whitespace-nowrap">
+            권한 거부됨
+          </div>
         ) : (
           <button
             onClick={handleEnable}

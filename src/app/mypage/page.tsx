@@ -175,7 +175,7 @@ export default function MyPage() {
       <div className="bg-white mt-2">
         <div className="divide-y divide-gray-200">
           <a
-            href="https://github.com/Hyuunw00/conv-promo"
+            href="https://conv-promo.vercel.app"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"

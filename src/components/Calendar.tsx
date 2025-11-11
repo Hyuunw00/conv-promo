@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { createKSTDate, formatDateString } from "@/utils/date";
+import { formatDateString } from "@/utils/date";
 
 interface CalendarProps {
   isOpen: boolean;
@@ -16,17 +16,22 @@ export default function Calendar({
   onClose,
   onApply,
   initialStartDate,
-  initialEndDate,
 }: CalendarProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const [tempStartDate, setTempStartDate] = useState<Date | null>(
-    initialStartDate ? createKSTDate(initialStartDate) : null
-  );
-  const [tempEndDate, setTempEndDate] = useState<Date | null>(
-    initialEndDate ? createKSTDate(initialEndDate) : null
-  );
-  const [currentMonth, setCurrentMonth] = useState(createKSTDate());
+  // 초기 년/월 설정
+  const getInitialYearMonth = () => {
+    if (initialStartDate) {
+      const [year, month] = initialStartDate.split("-").map(Number);
+      return { year, month };
+    }
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() + 1 };
+  };
+
+  const { year: initialYear, month: initialMonth } = getInitialYearMonth();
+  const [selectedYear, setSelectedYear] = useState(initialYear);
+  const [selectedMonth, setSelectedMonth] = useState(initialMonth);
 
   // 모달 외부 클릭 감지
   useEffect(() => {
@@ -45,67 +50,21 @@ export default function Calendar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
-  const getDaysInMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  const handleMonthSelect = (month: number) => {
+    setSelectedMonth(month);
   };
 
-  const getFirstDayOfMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  };
-
-  const handleDateClick = (day: number) => {
-    const clickedDate = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      day
-    );
-
-    if (!tempStartDate || (tempStartDate && tempEndDate)) {
-      // 첫 선택 또는 리셋
-      setTempStartDate(clickedDate);
-      setTempEndDate(null);
-    } else {
-      // 두 번째 선택
-      if (clickedDate < tempStartDate) {
-        setTempStartDate(clickedDate);
-        setTempEndDate(tempStartDate);
-      } else {
-        setTempEndDate(clickedDate);
-      }
-    }
-  };
-
-  const isDateInRange = (day: number) => {
-    if (!tempStartDate || !tempEndDate) return false;
-    const date = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      day
-    );
-    return date >= tempStartDate && date <= tempEndDate;
-  };
-
-  const isDateSelected = (day: number) => {
-    if (!tempStartDate && !tempEndDate) return false;
-    const date = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      day
-    );
-
-    return (
-      (tempStartDate && date.toDateString() === tempStartDate.toDateString()) ||
-      (tempEndDate && date.toDateString() === tempEndDate.toDateString())
-    );
+  const handleYearChange = (direction: "prev" | "next") => {
+    setSelectedYear((prev) => (direction === "prev" ? prev - 1 : prev + 1));
   };
 
   const handleApply = () => {
-    if (tempStartDate) {
-      const start = formatDateString(tempStartDate);
-      const end = tempEndDate ? formatDateString(tempEndDate) : start;
-      onApply(start, end);
-      onClose();
-    }
+    // 선택한 월의 첫날과 마지막날 계산
+    const startDate = new Date(selectedYear, selectedMonth - 1, 1);
+    const endDate = new Date(selectedYear, selectedMonth, 0);
+
+    onApply(formatDateString(startDate), formatDateString(endDate));
+    onClose();
   };
 
   const monthNames = [
@@ -122,7 +81,6 @@ export default function Calendar({
     "11월",
     "12월",
   ];
-  const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
 
   if (!isOpen) return null;
 
@@ -152,21 +110,14 @@ export default function Calendar({
           </button>
         </div>
 
-        {/* 캘린더 헤더 */}
-        <div className="flex items-center justify-between mb-3">
+        {/* 년도 선택 */}
+        <div className="flex items-center justify-between mb-6">
           <button
-            onClick={() =>
-              setCurrentMonth(
-                new Date(
-                  currentMonth.getFullYear(),
-                  currentMonth.getMonth() - 1
-                )
-              )
-            }
-            className="p-1.5 hover:bg-gray-100 rounded-lg"
+            onClick={() => handleYearChange("prev")}
+            className="p-2 hover:bg-gray-100 rounded-lg"
           >
             <svg
-              className="w-4 h-4"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -179,22 +130,13 @@ export default function Calendar({
               />
             </svg>
           </button>
-          <span className="text-sm font-semibold">
-            {currentMonth.getFullYear()}년 {monthNames[currentMonth.getMonth()]}
-          </span>
+          <span className="text-lg font-bold">{selectedYear}년</span>
           <button
-            onClick={() =>
-              setCurrentMonth(
-                new Date(
-                  currentMonth.getFullYear(),
-                  currentMonth.getMonth() + 1
-                )
-              )
-            }
-            className="p-1.5 hover:bg-gray-100 rounded-lg"
+            onClick={() => handleYearChange("next")}
+            className="p-2 hover:bg-gray-100 rounded-lg"
           >
             <svg
-              className="w-4 h-4"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -209,76 +151,41 @@ export default function Calendar({
           </button>
         </div>
 
-        {/* 요일 헤더 */}
-        <div className="grid grid-cols-7 mb-2">
-          {dayNames.map((day) => (
-            <div
-              key={day}
-              className="text-center text-xs text-gray-500 font-medium py-1"
-            >
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* 날짜 그리드 */}
-        <div className="grid grid-cols-7">
-          {/* 빈 칸 채우기 */}
-          {Array.from({ length: getFirstDayOfMonth(currentMonth) }).map(
-            (_, i) => (
-              <div key={`empty-${i}`} className="p-2" />
-            )
-          )}
-
-          {/* 날짜 */}
-          {Array.from({ length: getDaysInMonth(currentMonth) }).map((_, i) => {
-            const day = i + 1;
-            const isInRange = isDateInRange(day);
-            const isSelected = isDateSelected(day);
-            const isToday =
-              createKSTDate().toDateString() ===
-              new Date(
-                currentMonth.getFullYear(),
-                currentMonth.getMonth(),
-                day
-              ).toDateString();
+        {/* 월 선택 그리드 */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {monthNames.map((name, index) => {
+            const month = index + 1;
+            const isSelected = selectedMonth === month;
 
             return (
               <button
-                key={day}
-                onClick={() => handleDateClick(day)}
+                key={month}
+                onClick={() => handleMonthSelect(month)}
                 className={`
-                  p-2 text-sm rounded-lg transition-colors relative
-                  ${isSelected ? "bg-blue-500 text-white font-semibold" : ""}
-                  ${isInRange && !isSelected ? "bg-blue-50" : ""}
-                  ${!isSelected && !isInRange ? "hover:bg-gray-100" : ""}
-                  ${isToday && !isSelected ? "font-bold text-blue-500" : ""}
+                  py-3 px-4 rounded-xl text-sm font-medium transition-colors
+                  ${
+                    isSelected
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                  }
                 `}
               >
-                {day}
-                {isToday && (
-                  <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
-                )}
+                {name}
               </button>
             );
           })}
         </div>
 
         {/* 선택된 날짜 표시 */}
-        {tempStartDate && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs">
-            <span className="text-gray-600">선택된 날짜: </span>
-            <span className="font-medium text-gray-900">
-              {tempStartDate.toLocaleDateString("ko-KR")}
-              {tempEndDate &&
-                tempStartDate.toDateString() !== tempEndDate.toDateString() &&
-                ` ~ ${tempEndDate.toLocaleDateString("ko-KR")}`}
-            </span>
-          </div>
-        )}
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg text-xs">
+          <span className="text-gray-600">선택된 기간: </span>
+          <span className="font-medium text-gray-900">
+            {selectedYear}년 {selectedMonth}월
+          </span>
+        </div>
 
         {/* 적용/취소 버튼 */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2">
           <button
             onClick={onClose}
             className="flex-1 py-2.5 text-sm border border-gray-300 rounded-xl hover:bg-gray-50 font-medium"
@@ -287,8 +194,7 @@ export default function Calendar({
           </button>
           <button
             onClick={handleApply}
-            disabled={!tempStartDate}
-            className="flex-1 py-2.5 text-sm bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            className="flex-1 py-2.5 text-sm bg-blue-500 text-white rounded-xl hover:bg-blue-600 font-medium"
           >
             적용
           </button>

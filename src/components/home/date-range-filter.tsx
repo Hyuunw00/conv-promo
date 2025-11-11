@@ -58,8 +58,8 @@ export default function DateRangeFilter({
 
   const formatDateDisplay = (dateStr: string) => {
     // YYYY-MM-DD 형식에서 직접 파싱
-    const [year, month, day] = dateStr.split("-");
-    return `${parseInt(month)}/${parseInt(day)}`;
+    const [year, month] = dateStr.split("-");
+    return `${year}년 ${parseInt(month)}월`;
   };
 
   return (
@@ -84,7 +84,7 @@ export default function DateRangeFilter({
               />
             </svg>
             <span className="text-gray-700 font-medium">
-              {formatDateDisplay(startDate)} ~ {formatDateDisplay(endDate)}
+              {formatDateDisplay(startDate)}
             </span>
           </div>
           <svg
