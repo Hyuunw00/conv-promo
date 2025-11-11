@@ -4,6 +4,8 @@ on:
   schedule:
     # 매주 월요일 새벽 2시 (KST) = 일요일 17시 (UTC)
     - cron: "0 17 * * 0"
+    # 매달 2일 새벽 2시 (KST) = 1일 17시 (UTC)
+    - cron: "0 17 1 * *"
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
