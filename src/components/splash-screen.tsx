@@ -5,17 +5,37 @@ import Image from "next/image";
 
 /**
  * 앱 첫 로드 시 스플래시 스크린
+ * - 페이지가 로딩 중일 때만 표시
+ * - 이미 로드된 페이지에서는 표시하지 않음
  */
 export default function SplashScreen() {
-  const [isVisible, setIsVisible] = useState(true);
+  // 초기 로딩 중일 때만 true
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return document.readyState === "loading";
+  });
 
   useEffect(() => {
-    // 스플래시 스크린 표시 시간 (1.5초)
-    const timer = setTimeout(() => {
+    // 이미 로드 완료된 경우 스플래시 표시 안 함
+    if (document.readyState !== "loading") {
       setIsVisible(false);
-    }, 1500);
+      return;
+    }
 
-    return () => clearTimeout(timer);
+    // 로딩 완료 후 1.5초간 표시
+    const handleLoad = () => {
+      setTimeout(() => {
+        setIsVisible(false);
+      }, 1500);
+    };
+
+    if (document.readyState === "loading") {
+      window.addEventListener("DOMContentLoaded", handleLoad);
+    }
+
+    return () => {
+      window.removeEventListener("DOMContentLoaded", handleLoad);
+    };
   }, []);
 
   if (!isVisible) return null;

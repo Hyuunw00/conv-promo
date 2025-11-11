@@ -106,7 +106,7 @@ export default function HomeHeader({
 
             {/* 검색 버튼 */}
             <button
-              onClick={() => router.push("/search", { scroll: false })}
+              onClick={() => router.push("/search")}
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <svg
