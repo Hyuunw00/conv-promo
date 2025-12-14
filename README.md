@@ -9,6 +9,15 @@ GS25, CU, 세븐일레븐, 이마트24의 1+1, 2+1 행사를 한눈에 확인하
 
 🔗 **라이브 데모**: [https://conv-promo.vercel.app](https://conv-promo.vercel.app)
 
+## 📸 스크린샷
+
+<p align="center">
+  <img src="docs/screenshots/home.png" width="200" alt="홈 화면" />
+  <img src="docs/screenshots/filter.png" width="200" alt="필터" />
+  <img src="docs/screenshots/search.png" width="200" alt="검색" />
+  <img src="docs/screenshots/nearby.png" width="200" alt="내 주변" />
+</p>
+
 ## ✨ 주요 기능
 
 - 🏪 **4개 편의점 통합** - GS25, CU, 세븐일레븐, 이마트24
