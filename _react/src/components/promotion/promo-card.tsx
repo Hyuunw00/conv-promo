@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import {
   Heart,
   ChevronDown,
@@ -27,7 +27,7 @@ interface PromoCardProps {
   onSaveToggle?: (promoId: string) => void;
 }
 
-export default function PromoCard({
+function PromoCard({
   promotion,
   isSaved = false,
   onSaveToggle,
@@ -35,7 +35,6 @@ export default function PromoCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHearted, setIsHearted] = useState(isSaved);
 
-  // isSaved prop이 변경되면 isHearted 상태 업데이트
   useEffect(() => {
     setIsHearted(isSaved);
   }, [isSaved]);
@@ -169,3 +168,5 @@ export default function PromoCard({
     </article>
   );
 }
+
+export default memo(PromoCard);

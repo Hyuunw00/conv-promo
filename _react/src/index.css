@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+@keyframes progress {
+  0% {
+    left: -40%;
+    width: 40%;
+  }
+  100% {
+    left: 100%;
+    width: 40%;
+  }
+}
+
+.animate-progress {
+  position: absolute;
+  animation: progress 1s infinite linear;
+}

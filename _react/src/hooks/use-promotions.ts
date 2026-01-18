@@ -1,75 +1,62 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useMemo } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   PromotionService,
   type FetchPromotionsParams,
 } from "@/services/promotion.service";
-import type { Promotion } from "@/types/promotion";
+
+const PAGE_SIZE = 20;
 
 export function usePromotions(params: FetchPromotionsParams = {}) {
-  const [promotions, setPromotions] = useState<Promotion[]>([]);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const fetchPromotions = useCallback(
-    async (pageNum: number, isInitial: boolean) => {
-      try {
-        if (isInitial) setInitialLoading(true);
-        else setLoadingMore(true);
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: initialLoading,
+    isFetching,
+    isPlaceholderData,
+  } = useInfiniteQuery({
+    queryKey: ["promotions", params],
+    queryFn: async ({ pageParam = 0 }) => {
+      const { data, error, hasMore } = await PromotionService.fetchPromotions({
+        ...params,
+        offset: pageParam * PAGE_SIZE,
+        limit: PAGE_SIZE,
+      });
 
-        const {
-          data,
-          error,
-          hasMore: more,
-        } = await PromotionService.fetchPromotions({
-          ...params,
-          offset: pageNum * 20,
-          limit: 20,
-        });
-
-        if (error) throw error;
-
-        setPromotions((prev) => {
-          if (isInitial) return data || [];
-          const existingIds = new Set(prev.map((p) => p.id));
-          const newData = (data || []).filter((p) => !existingIds.has(p.id));
-          return [...prev, ...newData];
-        });
-
-        setHasMore(more || false);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error("Unknown error"));
-      } finally {
-        setInitialLoading(false);
-        setLoadingMore(false);
-      }
+      if (error) throw error;
+      return {
+        data: data || [],
+        nextOffset: hasMore ? pageParam + 1 : undefined,
+      };
     },
-    [params.brandName, params.category, params.dealType, params.search],
-  );
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
+    // 필터 변경 시 이전 데이터를 유지하여 Skeleton Flash 방지
+    placeholderData: (previousData) => previousData,
+  });
+
+  const promotions = useMemo(() => {
+    const allItems = data?.pages.flatMap((page) => page.data) || [];
+    const seen = new Set();
+    return allItems.filter((item) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+  }, [data]);
 
   useEffect(() => {
-    setPage(0);
-    setHasMore(true);
-    fetchPromotions(0, true);
-  }, [params.brandName, params.category, params.dealType, params.search]);
-
-  useEffect(() => {
-    if (page > 0) {
-      fetchPromotions(page, false);
-    }
-  }, [page, fetchPromotions]);
-
-  useEffect(() => {
-    if (initialLoading || loadingMore || !hasMore) return;
+    if (initialLoading || isFetchingNextPage || !hasNextPage) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setPage((prev) => prev + 1);
+          fetchNextPage();
         }
       },
       { threshold: 0.5 },
@@ -80,14 +67,15 @@ export function usePromotions(params: FetchPromotionsParams = {}) {
     }
 
     return () => observer.disconnect();
-  }, [initialLoading, loadingMore, hasMore]);
+  }, [initialLoading, isFetchingNextPage, hasNextPage, fetchNextPage]);
 
   return {
     promotions,
-    initialLoading,
-    loadingMore,
-    error,
-    hasMore,
+    initialLoading: initialLoading && !isPlaceholderData,
+    loadingMore: isFetchingNextPage, // 페이지 하단 로딩 스피너
+    isFetching: isFetching && !isFetchingNextPage, // 페이지 상단 로딩 바
+    error: error as Error | null,
+    hasMore: hasNextPage,
     loadMoreRef,
   };
 }

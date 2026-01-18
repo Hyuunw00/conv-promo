@@ -22,6 +22,7 @@ export default function Home() {
     promotions,
     initialLoading,
     loadingMore,
+    isFetching,
     error,
     hasMore,
     loadMoreRef,
@@ -55,7 +56,14 @@ export default function Home() {
         onFilterClick={() => setIsFilterOpen(true)}
       />
 
-      <div className="flex-1 px-4 py-6">
+      <div className="flex-1 px-4 py-6 relative">
+        {/* 필터 변경 시 상단 로딩 바 */}
+        {isFetching && (
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gray-100 overflow-hidden z-10">
+            <div className="h-full bg-blue-500 animate-progress origin-left" />
+          </div>
+        )}
+
         <div className="flex flex-col gap-6">
           {initialLoading
             ? Array.from({ length: 8 }).map((_, i) => (
@@ -71,6 +79,7 @@ export default function Home() {
             ref={loadMoreRef}
             className="mt-8 flex justify-center items-center h-20"
           >
+            {/* 스크롤시 하단 로딩 스피너 */}
             {loadingMore && (
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             )}
