@@ -1,8 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules/
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -11,14 +11,14 @@
 !.yarn/versions
 
 # testing
-/coverage
+coverage/
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
-/build
+build/
 
 # misc
 .DS_Store
@@ -42,8 +42,8 @@ yarn-error.log*
 next-env.d.ts
 
 # pwa / service worker
-/public/sw.js
-/public/swe-worker-*.js
+public/sw.js
+public/swe-worker-*.js
 
 # claude
 CLAUDE.md
@@ -60,4 +60,3 @@ crawler/logs/
 *.log
 crawler/*_sample_data.json
 crawler/data/
-
