@@ -38,6 +38,8 @@ export function usePromotions(params: FetchPromotionsParams = {}) {
     getNextPageParam: (lastPage) => lastPage.nextOffset,
     // 필터 변경 시 이전 데이터를 유지하여 Skeleton Flash 방지
     placeholderData: (previousData) => previousData,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 
   const promotions = useMemo(() => {

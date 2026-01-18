@@ -28,6 +28,13 @@ export default function Home() {
     loadMoreRef,
   } = usePromotions(filters);
 
+  const activeFilterCount = [
+    filters.brandName !== "ALL",
+    filters.category !== "ALL",
+    filters.dealType !== "ALL",
+    filters.orderBy !== "created_at",
+  ].filter(Boolean).length;
+
   const handleFilterApply = (newFilters: FetchPromotionsParams) => {
     setFilters(newFilters);
   };
@@ -45,14 +52,7 @@ export default function Home() {
         onBrandChange={(brandName) =>
           setFilters((prev) => ({ ...prev, brandName }))
         }
-        activeFilterCount={
-          [
-            filters.brandName !== "ALL",
-            filters.category !== "ALL",
-            filters.dealType !== "ALL",
-            filters.orderBy !== "created_at",
-          ].filter(Boolean).length
-        }
+        activeFilterCount={activeFilterCount}
         onFilterClick={() => setIsFilterOpen(true)}
       />
 
