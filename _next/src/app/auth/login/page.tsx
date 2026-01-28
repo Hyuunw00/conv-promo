@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithGoogle, signInWithKakao } from "@/lib/auth";
+import { signInWithGoogle, signInWithKakao } from "@/services/auth.service";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import Image from "next/image";

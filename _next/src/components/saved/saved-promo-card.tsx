@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Heart } from "lucide-react";
-import { removeSavedPromo } from "@/app/actions/saved-actions";
+import { toggleSavePromotionAction } from "@/actions/saved";
 import Image from "next/image";
 
 interface SavedPromoCardProps {
@@ -28,7 +28,7 @@ export function SavedPromoCard({
   const handleRemove = async () => {
     setIsRemoving(true);
     try {
-      await removeSavedPromo(userEmail, promo.id);
+      await toggleSavePromotionAction(userEmail, promo.id);
     } catch (error) {
       console.error("Error removing saved promo:", error);
       setIsRemoving(false);

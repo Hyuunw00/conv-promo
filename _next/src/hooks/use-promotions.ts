@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Promotion } from "@/types/promotion";
-import { getCurrentUser } from "@/lib/auth";
-import { toggleSavePromo } from "@/app/actions/saved-actions";
+import { getCurrentUser } from "@/services/auth.service";
+import { toggleSavePromotionAction, fetchSavedPromoIdsAction } from "@/actions/saved";
 import { User } from "@supabase/supabase-js";
-import { fetchSavedPromoIds } from "@/lib/saved";
 
 interface UsePromotionsOptions {
   initialData?: Promotion[];
@@ -43,7 +42,7 @@ export function usePromotions({
         setUser(currentUser);
 
         if (currentUser?.email) {
-          const data = await fetchSavedPromoIds(currentUser.email);
+          const data = await fetchSavedPromoIdsAction(currentUser.email);
           const savedSet = new Set(data);
           setSavedPromoIds(savedSet as Set<string>);
         }
@@ -63,7 +62,7 @@ export function usePromotions({
       }
 
       try {
-        const result = await toggleSavePromo(user.email, promoId);
+        const result = await toggleSavePromotionAction(user.email, promoId);
         if (result.success) {
           setSavedPromoIds((prev) => {
             const newSet = new Set(prev);

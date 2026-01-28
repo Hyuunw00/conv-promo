@@ -1,4 +1,4 @@
-import { PromotionService } from "@/services/promotion/promotion.service";
+import { fetchPromotionsAction } from "@/actions/promotions";
 import { getKSTDateString, toKST } from "@/utils/date";
 import Client from "./client";
 
@@ -42,7 +42,7 @@ export default async function HomePage({ searchParams }: HomeProps) {
   const orderBy = sort === "saved" ? "saved_count" : "start_date";
   const ascending = false; // 둘 다 내림차순 (saved_count 큰순, start_date 큰순)
 
-  const { data: initialData } = await PromotionService.fetchPromotions({
+  const { data: initialData } = await fetchPromotionsAction({
     brandName,
     dealType,
     category,
@@ -50,6 +50,8 @@ export default async function HomePage({ searchParams }: HomeProps) {
     endDate,
     orderBy,
     ascending,
+    offset: 0,
+    limit: 20,
   });
 
   return (

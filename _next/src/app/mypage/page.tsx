@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { signOut, deleteAccount } from "@/lib/auth";
-import { checkIsAdmin } from "@/lib/admin";
+import { signOut, deleteAccount } from "@/services/auth.service";
+import { checkIsAdminAction } from "@/actions/admin";
 import { toast } from "sonner";
 import NotificationPromptManual from "@/components/notifications/notification-prompt-manual";
 import Loading from "@/components/loading";
@@ -40,7 +40,7 @@ export default function MyPage() {
       if (!user?.email) return;
 
       try {
-        const adminStatus = await checkIsAdmin();
+        const adminStatus = await checkIsAdminAction(user.email);
 
         if (!adminStatus) {
           setIsAdmin(false);

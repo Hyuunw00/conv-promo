@@ -8,7 +8,7 @@ import { usePromotions } from "@/hooks/use-promotions";
 import { Promotion } from "@/types/promotion";
 import { toast } from "sonner";
 import FilterBottomSheet from "@/components/filter-botton-sheet";
-import { fetchSavedPromotions } from "@/lib/saved";
+import { fetchSavedPromotionsAction } from "@/actions/saved";
 import SavedHeader from "@/components/saved/saved-header";
 import PromoCard from "@/components/promo-card";
 
@@ -47,7 +47,7 @@ export default function SavedPageClient({
   } = usePromotions({
     initialData,
     fetchData: async (page: number) => {
-      return await fetchSavedPromotions(userEmail, page);
+      return await fetchSavedPromotionsAction(userEmail, page);
     },
   });
 

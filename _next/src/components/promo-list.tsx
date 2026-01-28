@@ -5,7 +5,7 @@ import PromoCard from "@/components/promo-card";
 import Loading from "@/components/loading";
 import { Promotion } from "@/types/promotion";
 import { toast } from "sonner";
-import { fetchPromotions } from "@/lib/promotions";
+import { fetchPromotionsAction } from "@/actions/promotions";
 import { useEffect } from "react";
 
 interface PromotionListProps {
@@ -25,7 +25,7 @@ export default function PromotionList({
   filters,
 }: PromotionListProps) {
   const fetchData = async (page: number) => {
-    const result = await fetchPromotions({
+    const result = await fetchPromotionsAction({
       brandName: filters.brandName || undefined,
       dealType: filters.dealType || undefined,
       category: filters.category || undefined,
@@ -69,7 +69,7 @@ export default function PromotionList({
   // 필터 변경 시 데이터 리셋 및 리페치
   useEffect(() => {
     const refetchData = async () => {
-      const result = await fetchPromotions({
+      const result = await fetchPromotionsAction({
         brandName: filters.brandName || undefined,
         dealType: filters.dealType || undefined,
         category: filters.category || undefined,

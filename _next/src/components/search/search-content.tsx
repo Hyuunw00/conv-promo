@@ -6,10 +6,10 @@ import PromoCard from "@/components/promo-card";
 import { usePromotions } from "@/hooks/use-promotions";
 import ComparisonView from "@/components/search/comparision-view";
 import {
-  fetchSearchResults,
-  fetchSearchSuggestions,
-  fetchComparisonData,
-} from "@/lib/search";
+  searchPromotionsAction,
+  fetchSearchSuggestionsAction,
+  fetchComparisonDataAction,
+} from "@/actions/promotions";
 
 interface SearchContentProps {
   onClose?: () => void;
@@ -43,7 +43,14 @@ export default function SearchContent({ onClose }: SearchContentProps) {
   } = usePromotions({
     initialData: [],
     fetchData: async (page: number) => {
-      return await fetchSearchResults(searchQuery, page, ITEMS_PER_PAGE);
+      const result = await searchPromotionsAction(searchQuery, ITEMS_PER_PAGE * (page + 1));
+      const data = result.data || [];
+      const start = ITEMS_PER_PAGE * page;
+      const pageData = data.slice(start, start + ITEMS_PER_PAGE);
+      return {
+        data: pageData,
+        hasMore: data.length > start + ITEMS_PER_PAGE,
+      };
     },
   });
 
@@ -58,8 +65,8 @@ export default function SearchContent({ onClose }: SearchContentProps) {
     }
 
     debounceTimerRef.current = setTimeout(async () => {
-      const suggestions = await fetchSearchSuggestions(value, 5);
-      setSearchSuggestions(suggestions);
+      const result = await fetchSearchSuggestionsAction(value, 5);
+      setSearchSuggestions(result.data || []);
     }, 1000);
   };
 
@@ -72,8 +79,8 @@ export default function SearchContent({ onClose }: SearchContentProps) {
     setSearchQuery(query);
     setShowComparison(false); // 새 검색 시 비교 뷰 닫기
 
-    const { data } = await fetchSearchResults(query, 0, ITEMS_PER_PAGE);
-    resetData(data);
+    const result = await searchPromotionsAction(query, ITEMS_PER_PAGE);
+    resetData(result.data || []);
     setIsSearching(false);
   };
 
@@ -82,7 +89,7 @@ export default function SearchContent({ onClose }: SearchContentProps) {
     if (!searchQuery.trim()) return;
 
     try {
-      const data = await fetchComparisonData(searchQuery);
+      const data = await fetchComparisonDataAction(searchQuery);
       setComparisonData(data);
       setShowComparison(true);
     } catch (error) {
