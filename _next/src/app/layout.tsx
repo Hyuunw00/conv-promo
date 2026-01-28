@@ -1,8 +1,9 @@
 import "@/styles/global.css";
 import BottomNavigation from "@/components/layout/bottom-navigation";
-import NotificationPromptAuto from "@/components/notifications/notification-prompt-auto";
-import AppInstallBanner from "@/components/notifications/app-install-banner";
-import SplashScreen from "@/components/splash-screen";
+// PWA 관련 컴포넌트 주석처리 - 제대로 이해하고 다시 적용 예정
+// import NotificationPromptAuto from "@/components/notifications/notification-prompt-auto";
+// import AppInstallBanner from "@/components/notifications/app-install-banner";
+// import SplashScreen from "@/components/splash-screen";
 import Script from "next/script";
 import { Toaster } from "sonner";
 import type { Metadata } from "next";
@@ -92,12 +93,13 @@ export default function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
-        <link rel="manifest" href="/manifest.json" />
+        {/* PWA 관련 메타 태그 주석처리 - 제대로 이해하고 다시 적용 예정 */}
+        {/* <link rel="manifest" href="/manifest.json" /> */}
         <link rel="icon" href="/icon-192.png" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        {/* <link rel="apple-touch-icon" href="/icon-192.png" /> */}
+        {/* <meta name="mobile-web-app-capable" content="yes" /> */}
+        {/* <meta name="apple-mobile-web-app-capable" content="yes" /> */}
+        {/* <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /> */}
       </head>
       <body>
         {/* Structured Data for SEO */}
@@ -132,14 +134,16 @@ export default function RootLayout({
 
         <div className="min-h-screen bg-gray-50 max-w-md mx-auto relative">
           <div className="statusbar-overlay" />
-          <SplashScreen />
+          {/* PWA 관련 컴포넌트 주석처리 */}
+          {/* <SplashScreen /> */}
           {children}
           <BottomNavigation />
-          <AppInstallBanner />
-          <NotificationPromptAuto />
+          {/* <AppInstallBanner /> */}
+          {/* <NotificationPromptAuto /> */}
           <Toaster position="top-center" />
         </div>
-        {process.env.NODE_ENV === "development" && (
+        {/* PWA Service Worker 등록 해제 스크립트 주석처리 */}
+        {/* {process.env.NODE_ENV === "development" && (
           <Script id="unregister-sw" strategy="afterInteractive">
             {`
               if ('serviceWorker' in navigator) {
@@ -151,7 +155,7 @@ export default function RootLayout({
               }
             `}
           </Script>
-        )}
+        )} */}
       </body>
     </html>
   );
