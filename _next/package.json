@@ -33,6 +33,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.9",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "prisma": "^6.16.1",
     "serwist": "^9.2.1",
     "tailwindcss": "^4",
